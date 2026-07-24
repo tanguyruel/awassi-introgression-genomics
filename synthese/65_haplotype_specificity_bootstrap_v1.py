@@ -1,0 +1,128 @@
+#!/usr/bin/env python3
+"""
+Spécificité haplotypique du P3, testée proprement.
+
+Deux corrections par rapport au script 64 :
+
+1. L'espérance de la raréfaction est calculée EXACTEMENT, sans Monte-Carlo.
+   Pour l'haplotype Awassi i et le groupe g comptant n_g haplotypes dont m_ig
+   sont des « jumeaux » (< 1 % de sites différents), la probabilité qu'un tirage
+   de k=16 haplotypes contienne au moins un jumeau vaut :
+
+       p_ig = 1 − C(n_g − m_ig, k) / C(n_g, k)
+
+   Le score du groupe est la moyenne des p_ig sur les 44 haplotypes Awassi.
+   L'écart-type entre tirages du script 64 n'est que du bruit de simulation :
+   il ne mesure PAS l'incertitude du résultat.
+
+2. L'incertitude réelle vient du petit nombre d'individus Awassi (22). On la
+   mesure par bootstrap sur ces individus (2000 rééchantillonnages avec remise),
+   ce qui donne : la probabilité que le P3 soit le meilleur groupe, et
+   l'intervalle de confiance de sa marge sur le meilleur des autres.
+
+Sortie : analyses/synthese_resultats/haplotype_sharing_all_groups/
+         Haplotype_specificity_bootstrap.tsv
+
+Script de référence pour "Bootstrap de spécificité" (cf. Annexe A du rapport de stage) —
+remplace le script 64 (Monte-Carlo) pour le résultat rapporté, mais l'importe encore pour
+les données de partage : IMPORTANT, 64_haplotype_sharing_all_groups_v1.py doit rester présent
+dans le même dossier (import par nom de module, pas par chemin relatif).
+Usage : python3 65_haplotype_specificity_bootstrap_v1.py
+Chemin PROJ ci-dessous en dur (machine d'origine) — à adapter si le dépôt est cloné ailleurs.
+"""
+# ── Imports : sys (chemin d'import), combinatoire, chemins, calcul numpy ──
+import sys, csv
+from math import comb
+from pathlib import Path
+import numpy as np
+
+PROJ = Path("/home/tanguyruel/Bureau/genome_complet_Awassi")  # chemin en dur à adapter
+sys.path.insert(0, str(PROJ / "scripts/synthese"))  # ajoute le dossier des scripts au chemin d'import Python
+import importlib
+# ── Import dynamique du script 64 (64_haplotype_sharing_all_groups_v1.py) comme
+# module, pour réutiliser ses fonctions et données (load_pop, read_haplotypes,
+# filter_snps, mismatch_matrix, REGIONS, GROUPS, PHASE) sans dupliquer le code ──
+m64 = importlib.import_module("64_haplotype_sharing_all_groups_v1")
+
+OUT = PROJ / "analyses/synthese_resultats/haplotype_sharing_all_groups"  # dossier de sortie (partagé avec le script 64)
+K, N_BOOT, THRESH = 16, 2000, 0.01  # taille de tirage (raréfaction), nb de bootstraps, seuil "jumeau" (<1% de sites différents)
+CANDIDATES = ["Africa", "Asia", "Europe", "America", "Australia"]  # groupes P3 candidats testés (ME exclu)
+
+
+def p_at_least_one(n, m, k):
+    """Proba qu'un tirage sans remise de k haplotypes parmi n en contienne >= 1 des m jumeaux."""
+    if m == 0:
+        return 0.0  # aucun jumeau dans le groupe -> probabilité nulle
+    if n - m < k:
+        return 1.0  # moins de k non-jumeaux disponibles -> un jumeau est certain dans le tirage
+    # probabilité complémentaire : 1 - P(aucun jumeau tiré)
+    # P(aucun jumeau) = C(n-m, k) / C(n, k)  (tirages de k parmi les n-m non-jumeaux, sur tous les tirages de k parmi n)
+    return 1.0 - comb(n - m, k) / comb(n, k)
+
+
+def main():
+    pop = m64.load_pop()  # groupes -> ensembles d'échantillons (fonction du script 64)
+    rng = np.random.default_rng(7)  # générateur aléatoire reproductible (graine fixe) pour le bootstrap
+    rows = []  # résultats accumulés (une ligne par région)
+
+    for rid, rel, chrom, start, end, p3best in m64.REGIONS:  # REGIONS défini dans le script 64
+        vcf = m64.PHASE / rel  # chemin complet du VCF phasé (PHASE défini dans le script 64)
+        H, samples = m64.read_haplotypes(vcf, chrom, start, end)  # charge la matrice haplotypes x SNP (fonction du script 64)
+        idx = {g: np.array([j for i, s in enumerate(samples) if s in pop[g] for j in (2 * i, 2 * i + 1)])
+               for g in m64.GROUPS}  # indices d'haplotypes par groupe (GROUPS défini dans le script 64)
+        used = np.concatenate([idx[g] for g in m64.GROUPS])  # tous les haplotypes utilisés, dans l'ordre des groupes
+        H = H[used]  # restreint et réordonne la matrice par groupe
+        off, pos = 0, {}
+        for g in m64.GROUPS:
+            pos[g] = np.arange(off, off + len(idx[g])); off += len(idx[g])  # plage d'indices de chaque groupe
+        H, n_snps = m64.filter_snps(H)  # filtre qualité des SNP (fonction du script 64)
+        A = H[pos["Awassi"]]                       # 44 haplotypes = 22 individus × 2
+        n_ind = A.shape[0] // 2  # nombre d'individus Awassi
+
+        # m[i, g] = nb de jumeaux de l'haplotype Awassi i dans le groupe g
+        M, NG = {}, {}
+        for g in CANDIDATES:
+            B = H[pos[g]]  # haplotypes du groupe candidat g
+            D = m64.mismatch_matrix(A, B)  # fraction de mésappariement Awassi x g (fonction du script 64)
+            M[g] = (D < THRESH).sum(axis=1)  # nb de "jumeaux" (< 1% mésappariement) par haplotype Awassi, dans g
+            NG[g] = B.shape[0]  # effectif total du groupe g
+
+        # p[i, g] : espérance exacte, puis score du groupe
+        P = {g: np.array([p_at_least_one(NG[g], int(mi), K) for mi in M[g]]) for g in CANDIDATES}  # proba exacte par haplotype Awassi et par groupe
+        score = {g: 100 * P[g].mean() for g in CANDIDATES}  # score du groupe = moyenne des proba sur tous les haplotypes Awassi (en %)
+
+        # bootstrap sur les 22 individus Awassi (les 2 haplotypes d'un individu restent ensemble)
+        wins, margins = 0, []
+        for _ in range(N_BOOT):
+            ind = rng.integers(0, n_ind, n_ind)  # tirage avec remise de n_ind individus (indices d'individus)
+            hap = np.concatenate([[2 * i, 2 * i + 1] for i in ind])  # les 2 haplotypes de chaque individu tiré
+            sc = {g: 100 * P[g][hap].mean() for g in CANDIDATES}  # score de chaque groupe sur cet échantillon bootstrap
+            best_other = max((g for g in CANDIDATES if g != p3best), key=lambda g: sc[g])  # meilleur concurrent du P3 retenu
+            margins.append(sc[p3best] - sc[best_other])  # marge du P3 retenu sur son meilleur concurrent
+            if sc[p3best] >= max(sc.values()):
+                wins += 1  # compte les tirages où le P3 retenu est (ex-aequo) le meilleur groupe
+
+        margins = np.array(margins)
+        lo, hi = np.percentile(margins, [2.5, 97.5])  # intervalle de confiance à 95% de la marge (percentiles bootstrap)
+        best_obs = max(score, key=score.get)  # groupe avec le meilleur score observé (sans bootstrap)
+        rows.append({
+            "region_id": rid, "P3_best": p3best, "n_snps": n_snps,
+            "score_P3": round(score[p3best], 1),
+            "best_group": best_obs, "score_best": round(score[best_obs], 1),
+            "margin_P3_vs_best_other": round(score[p3best] - max(score[g] for g in CANDIDATES if g != p3best), 1),  # marge observée (sans bootstrap)
+            "boot_margin_lo": round(float(lo), 1), "boot_margin_hi": round(float(hi), 1),  # bornes de l'IC 95% bootstrap
+            "P_P3_is_best": round(wins / N_BOOT, 3),  # proportion de tirages bootstrap où P3 est le meilleur groupe
+            **{f"score_{g}": round(score[g], 1) for g in CANDIDATES},  # score détaillé de chaque groupe candidat
+        })
+        print(f"{rid:28s} P3={p3best:10s} score_P3={score[p3best]:5.1f}  meilleur={best_obs:10s} "
+              f"marge={rows[-1]['margin_P3_vs_best_other']:+6.1f} [{lo:+.1f};{hi:+.1f}]  P(P3 best)={wins/N_BOOT:.2f}")
+
+    f = OUT / "Haplotype_specificity_bootstrap.tsv"
+    with open(f, "w", newline="") as fh:
+        w = csv.DictWriter(fh, fieldnames=list(rows[0].keys()), delimiter="\t")  # écrivain TSV avec en-têtes
+        w.writeheader(); w.writerows(rows)  # écrit l'en-tête puis toutes les lignes
+    print("\nÉcrit :", f)
+
+
+if __name__ == "__main__":
+    main()
