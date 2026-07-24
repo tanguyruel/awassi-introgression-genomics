@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Script 35 — LD (r²) recalculé séparément pour Awassi seul, P3 seul et ME seul,
-en plus du LD combiné Awassi+ME+P3 déjà utilisé dans les heatmaps (script 26).
+LD (r²) recalculé séparément pour Awassi seul, P3 seul et ME seul,
+en plus du LD combiné Awassi+ME+P3 déjà utilisé dans les heatmaps (heatmap_haplotypes_arbre_ld.py).
 
 Objectif (retour utilisateur) : le LD combiné peut être gonflé par la
 structure ENTRE groupes (si Awassi/ME/P3 ont des fréquences alléliques très
@@ -11,13 +11,13 @@ Wahlund-like). Recalculer le LD DANS chaque groupe séparément permet de
 vérifier si le bloc haplotypique existe réellement à l'intérieur d'Awassi
 et/ou de P3, ou si c'est surtout un artefact de mélange de groupes.
 
-Réutilise les fonctions du script 26 (import direct, même VCF phasés).
+Réutilise les fonctions de heatmap_haplotypes_arbre_ld.py (import direct, même VCF phasés).
 
 Sortie : analyses/synthese_resultats/ld_per_subgroup_9regions/
   LD_per_subgroup_9regions.tsv
 
-Script de référence pour "LD par sous-groupe" (cf. Annexe A du rapport de stage).
-Usage : python3 35_ld_per_subgroup_9regions_v1.py  (nécessite 26_heatmap_LD_arbre_9regions_v2.py
+Script de référence pour "LD par sous-groupe" (appelé "ld_par_sousgroupe.py" dans l'Annexe A du
+rapport de stage). Usage : python3 ld_par_sousgroupe.py  (nécessite heatmap_haplotypes_arbre_ld.py
 dans le même dossier, importé directement)
 """
 
@@ -27,13 +27,13 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-# ── Import dynamique du script 26 (26_heatmap_LD_arbre_9regions_v2.py), pour
-# réutiliser directement ses fonctions (load_haplotypes, restrict_positions,
+# ── Import dynamique de heatmap_haplotypes_arbre_ld.py, pour réutiliser
+# directement ses fonctions (load_haplotypes, restrict_positions,
 # filter_snps, compute_r2) sans dupliquer le code ──
-SCRIPT26 = Path(__file__).with_name("26_heatmap_LD_arbre_9regions_v2.py")  # chemin du script 26 (même dossier)
-spec = importlib.util.spec_from_file_location("heatmap26", SCRIPT26)  # spec du module à charger dynamiquement
-heatmap26 = importlib.util.module_from_spec(spec)  # instancie le module (vide pour l'instant)
-spec.loader.exec_module(heatmap26)  # exécute le script 26 -> ses fonctions deviennent accessibles via heatmap26.xxx
+SCRIPT_HEATMAP = Path(__file__).with_name("heatmap_haplotypes_arbre_ld.py")  # même dossier
+spec = importlib.util.spec_from_file_location("heatmap_ld", SCRIPT_HEATMAP)  # spec du module à charger dynamiquement
+heatmap_ld = importlib.util.module_from_spec(spec)  # instancie le module (vide pour l'instant)
+spec.loader.exec_module(heatmap_ld)  # exécute heatmap_haplotypes_arbre_ld.py -> ses fonctions deviennent accessibles via heatmap_ld.xxx
 
 POP_DIR = Path("analyses/fst/popmaps_separees_v1")  # dossier des popmaps (listes d'individus par groupe)
 OUTDIR = Path("analyses/synthese_resultats/ld_per_subgroup_9regions")  # dossier de sortie de la table
@@ -42,8 +42,8 @@ OUTDIR.mkdir(parents=True, exist_ok=True)  # crée le dossier de sortie s'il n'e
 MAX_MISSING = 0.05  # seuil max de génotypes manquants toléré par SNP
 MIN_MAF = 0.05  # fréquence allélique mineure minimale pour garder un SNP
 
-# (chr, start, end, P3, vcf) — mêmes fenêtres et VCF phasés que script 26
-REGIONS = [  # une entrée par région, mêmes 9 régions/VCF que le script 26
+# (chr, start, end, P3, vcf) — mêmes fenêtres et VCF phasés que heatmap_haplotypes_arbre_ld.py
+REGIONS = [  # une entrée par région, mêmes 9 régions/VCF que le heatmap_haplotypes_arbre_ld.py
     {"region_id": "chr3_129.2Mb_desert", "chr": 3, "start": 129220001, "end": 129260000, "P3": "Europe",
      "vcf": "analyses/phasing_beagle/Phasing_Beagle_v2_5regions_v10b/phased/chr3_129.22_129.26Mb.beagle_phased.vcf.gz"},
     {"region_id": "chr17_SPATA5", "chr": 17, "start": 34160001, "end": 34220000, "P3": "Asia",
@@ -70,10 +70,10 @@ def ld_summary_for_subset(H, positions, mask):
     if Hs.shape[0] < 4:
         return None  # trop peu d'haplotypes pour un LD fiable
     try:
-        Hf, posf = heatmap26.filter_snps(Hs, positions.copy(), MAX_MISSING, MIN_MAF)  # filtre qualité SNP (fonction du script 26)
+        Hf, posf = heatmap_ld.filter_snps(Hs, positions.copy(), MAX_MISSING, MIN_MAF)  # filtre qualité SNP (fonction de heatmap_haplotypes_arbre_ld.py)
     except RuntimeError:
         return None  # moins de 2 SNP après filtre -> sous-groupe ignoré
-    r2, ld_pos = heatmap26.compute_r2(Hf, posf)  # LD (r²) calculé dans ce sous-groupe uniquement (fonction du script 26)
+    r2, ld_pos = heatmap_ld.compute_r2(Hf, posf)  # LD (r²) calculé dans ce sous-groupe uniquement (fonction de heatmap_haplotypes_arbre_ld.py)
     tri = np.tril_indices(len(ld_pos), k=-1)  # indices du triangle inférieur (paires uniques, hors diagonale)
     vals = r2[tri]  # valeurs r² de toutes les paires de SNP
     off = vals[np.isfinite(vals)]  # exclut les valeurs non finies
@@ -93,10 +93,10 @@ def compute_region(reg):
     print(f"\n{'='*70}\n{region_id} | P3={p3}")
 
     group_order = ["Awassi", "MiddleEastNonAwassi", p3]
-    H, positions, haplotypes, individuals, hap_index, groups, selected, s2g = heatmap26.load_haplotypes(
+    H, positions, haplotypes, individuals, hap_index, groups, selected, s2g = heatmap_ld.load_haplotypes(
         vcf, str(POP_DIR), group_order
-    )  # charge la matrice haplotypes x SNP depuis le VCF phasé (fonction du script 26)
-    H, positions = heatmap26.restrict_positions(H, positions, start, end)  # restreint à la fenêtre de la région (fonction du script 26)
+    )  # charge la matrice haplotypes x SNP depuis le VCF phasé (fonction de heatmap_haplotypes_arbre_ld.py)
+    H, positions = heatmap_ld.restrict_positions(H, positions, start, end)  # restreint à la fenêtre de la région (fonction de heatmap_haplotypes_arbre_ld.py)
 
     rows = []
     subsets = {  # masques booléens définissant chaque sous-groupe à comparer

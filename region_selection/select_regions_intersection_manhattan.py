@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Script 23 — Manhattan plots FST et fd, genome entier (25 chromosomes),
+Manhattan plots FST et fd, genome entier (25 chromosomes),
 panels empilés et alignés sur le même axe X (position cumulée), pour
 regarder séparément où chaque statistique ressort fort — au lieu du score
-combiné (moyenne géométrique) du script 15_rebuild_v10b.py.
+combiné (moyenne géométrique) du select_regions_score_combine.py.
 
 Demande de François (via l'utilisateur) : identifier les régions qui
 ressortent indépendamment dans FST ET dans fd. Méthode proche de Hu et al.
@@ -13,7 +13,7 @@ pointillés).
 v2 — chr25 était coupé (xlim trop court) -> corrigé ; étiquettes de région
 passées à l'horizontale (avant : rotation 90°, illisible), remplacées par le
 nom du gène réel annoté depuis le GFF Oar_v4.0 (au lieu du simple nom de
-région) — mêmes gènes que script 21, étendu aux 25 chromosomes.
+région) — même méthode d'annotation que fst_local_genomewide.sh, étendue aux 25 chromosomes.
 
 v3 — retour demandé à 1 point rouge par FENÊTRE brute de 20kb (pas 1 par
 région fusionnée) : le chevauchement visuel (fenêtres qui se recouvrent tous
@@ -23,14 +23,14 @@ glissante — gardé tel quel, juste indiqué explicitement sur le plot
 positionner UNE étiquette de gène par région (pas à agréger les points).
 
 v4 — correction du filtre "strict" : ne vérifiait que 2 critères (FST_ME et
-fd_max), alors que le filtre STRICT de référence (script 15) en a 5 (hors
+fd_max), alors que le filtre STRICT de référence (select_regions_score_combine.py) en a 5 (hors
 n_windows, volontairement omis ici) : FST_ME≥0.15, FST_score≥0.15,
 FST_closest_group≤0.05, fd_max≥0.85, D_at_max_fd>0.20. Avec seulement 2
 critères, chr13:37Mb (CSRP2BP) apparaissait à tort comme strict alors qu'elle
 échoue sur FST_score (0.1499) et D_at_max_fd (0.127). Corrigé : les 5
 critères complets sont maintenant appliqués → 9 régions strictes (pas 10).
 
-Entrées (déjà construites, script 22, rien recalculé depuis les VCF) :
+Entrées (déjà construites en amont dans le dépôt de travail, rien recalculé depuis les VCF) :
   analyses/synthese_resultats/relecture_fst_fd/genomewide_separate_rank/
     FST_all_windows_ranked_genomewide.tsv  (267 067 fenêtres)
     fd_all_windows_ranked_genomewide.tsv   (317 729 fenêtres valides)
@@ -52,7 +52,7 @@ import matplotlib
 matplotlib.use("Agg")  # backend non interactif (génère les PNG/PDF sans écran)
 import matplotlib.pyplot as plt
 
-BASE   = Path("analyses/synthese_resultats/relecture_fst_fd/genomewide_separate_rank")  # tables FST/fd genome-wide (script 22)
+BASE   = Path("analyses/synthese_resultats/relecture_fst_fd/genomewide_separate_rank")  # tables FST/fd genome-wide déjà classées (construites en amont)
 OUTDIR = Path("analyses/synthese_resultats/manhattan_fst_fd_v1")  # dossier de sortie
 OUTDIR.mkdir(parents=True, exist_ok=True)  # crée le dossier de sortie si absent
 GFF = Path("data/reference/Oar_v4.0/GCF_000298735.2_Oar_v4.0_genomic.gff.gz")  # annotation des gènes
@@ -96,8 +96,8 @@ def add_cum_pos(df, offsets):
 
 
 def load_genes_by_chr():
-    """Genes du GFF Oar_v4.0 pour les 25 chromosomes (mêmes accessions NC_
-    que script 21, étendues : NC_019458.2=chr1 ... NC_019482.2=chr25)."""
+    """Genes du GFF Oar_v4.0 pour les 25 chromosomes (mêmes accessions NC_ que
+    fst_local_genomewide.sh, étendues : NC_019458.2=chr1 ... NC_019482.2=chr25)."""
     chr_map = {f"NC_0194{58 + i}.2": str(i + 1) for i in range(25)}  # accession NCBI -> numéro de chromosome (1-25)
     genes_by_chr = {c: [] for c in chr_map.values()}  # liste de gènes (start,end,name) par chromosome
     with gzip.open(GFF, "rt") as f:  # lit le GFF compressé ligne par ligne (fichier volumineux)
@@ -169,7 +169,7 @@ def fuse_intersection(fst, fd, inter_keys):
 
 
 def main():
-    print("Chargement des tables genome-wide (déjà construites, script 22)...")
+    print("Chargement des tables genome-wide (déjà construites en amont)...")
     fst, fd = load_data()
     print(f"  FST : {len(fst):,} fenêtres")
     print(f"  fd  : {len(fd):,} fenêtres")
@@ -195,7 +195,7 @@ def main():
 
     reg = fuse_intersection(fst, fd, inter_keys)  # fusionne les fenêtres de l'intersection en régions
     reg["cum_pos"] = reg["chr"].map(offsets) + (reg["start"] + reg["end"]) / 2  # position cumulée pour le placement des étiquettes
-    # 5 critères complets du filtre STRICT (script 15), hors n_windows (voir
+    # 5 critères complets du filtre STRICT (select_regions_score_combine.py), hors n_windows (voir
     # échange précédent : n_windows est un critère de largeur, pas de force
     # de signal, volontairement omis dans cette exploration "pics")
     reg["strict"] = (  # une région est stricte si elle passe les 5 seuils simultanément

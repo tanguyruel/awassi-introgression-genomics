@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 """
-Script 50 — Pi genome-wide "de fond" par groupe géo (7 groupes), pour servir
-de référence à laquelle comparer le pi des 9 régions candidates (déjà calculé
-script 28, une valeur par région).
+Pi genome-wide "de fond" par groupe géo (7 groupes), pour servir de référence à
+laquelle comparer le pi des 9 régions candidates (voir pi_regions_qc.py).
 
 Méthode : plutôt que traiter les ~100M SNP du génome entier (VCF filtrés
 ~100 Go au total), échantillon aléatoire de 600 fenêtres de 20kb réparties
@@ -11,7 +10,7 @@ proportionnellement à la longueur de chaque chromosome (~12 Mb échantillonnés
 grands nombres), sans scanner tout le génome. Les 9 régions candidates (+
 marge 200kb) sont exclues du tirage pour ne pas biaiser la référence de fond.
 
-Même formule pi_site que script 28 : (2n/(2n-1))*2p(1-p), sommée puis divisée
+Même formule pi_site que pi_regions_qc.py : (2n/(2n-1))*2p(1-p), sommée puis divisée
 par le nombre total de bp échantillonnés (convention vcftools --window-pi).
 
 Source VCF : analyses/fst/local_20kb_step5kb_sep_EU_AM_AUS_v1/filtered_vcf/
@@ -21,10 +20,10 @@ Source VCF : analyses/fst/local_20kb_step5kb_sep_EU_AM_AUS_v1/filtered_vcf/
 Sortie : analyses/synthese_resultats/pi_genomewide_baseline/
   - windows_sampled.bed (fenêtres tirées, pour traçabilité/reproductibilité)
   - Pi_genomewide_baseline_by_group.tsv
-  - pi_baseline_vs_regions.png/.pdf (comparaison avec script 28)
+  - pi_baseline_vs_regions.png/.pdf (comparaison avec les résultats de pi_regions_qc.py)
 
 Script de référence pour "π — fond génomique" (cf. Annexe A du rapport de stage),
-complémentaire du script 30 (π dans les 9 régions elles-mêmes).
+complémentaire du pi_regions_qc.py (π dans les 9 régions elles-mêmes).
 Usage : python3 50_pi_genomewide_baseline_v1.py
 """
 

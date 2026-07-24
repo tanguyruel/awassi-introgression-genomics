@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """
-Script 15 — Rebuild top50 + sélection stricte (v10b)
+Sélection des 50 meilleures régions candidates + sélection stricte, à partir du
+ranking FST et fd déjà calculés genome-wide (score géométrique combiné des deux).
 
-Correction unique vs v8b : ajout du filtre P1=MiddleEastNonAwassi lors du
+Point de méthode important : filtre P1=MiddleEastNonAwassi lors du
 chargement du fd. Tout le reste (FST source, critères stricts v9, fusion,
 comptage SNPs) est identique.
 

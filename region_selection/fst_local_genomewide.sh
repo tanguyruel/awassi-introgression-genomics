@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # Rôle : version la plus récente du FST local genome-wide Awassi vs groupes,
-#        fenêtres 20kb / step 5kb (plus fin que le script 20), Europe/America/
+#        fenêtres 20kb / step 5kb (plus fin qu'une version antérieure à 20kb simple), Europe/America/
 #        Australia séparés. Recrée les popfiles si absents (depuis les groupes
 #        utilisés en analyse fd) et écrit une table brute + une table filtrée
 #        par nombre minimal de SNP (MIN_SNPS).

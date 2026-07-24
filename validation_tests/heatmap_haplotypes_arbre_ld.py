@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
-Script 26 — Heatmap génotypes + arbre + LD pour les 9 régions candidates
+Heatmap génotypes + arbre + LD pour les 9 régions candidates
 (7 régions A v10b + 2 régions nouvelles KLF12/chr10 et LOC101123547/chr3).
 
-Reprend script 15 (15_heatmap_LD_arbre_7regions_v1.py) à l'identique, avec
+Reprend une version antérieure du dépôt de travail (7 régions) à l'identique, avec
 2 ajouts :
-  1) 2 régions supplémentaires (VCF phasés par script 25).
+  1) 2 régions supplémentaires (VCF phasés séparément, voir phasing_beagle.sh pour la méthode).
   2) Annotation du/des gène(s) d'intérêt dans chaque fenêtre : bande verte
      semi-transparente + traits pointillés à la position exacte (GFF Oar_v4.0,
      coords vérifiées directement dans le GFF, cf. AWASSI_AGENT_LOG.md) sur la
@@ -16,7 +16,7 @@ Sorties : analyses/haplotype_heatmap/Awassi_haplo/results/figures_finales/region
 Script de référence pour "Heatmap + arbre + LD" (cf. Annexe A du rapport de stage,
 et skill .claude/skills/heatmap-ld-region/). Remplace 15_heatmap_LD_arbre_7regions_v1.py
 et les anciennes tentatives dans scripts/04_heatmap_ggtree/ et 04_heatmap_haplotype/
-(exploratoires, non retenues). Importé directement par le script 35 (LD par sous-groupe).
+(exploratoires, non retenues). Importé directement par le ld_par_sousgroupe.py (LD par sous-groupe).
 Usage : python3 26_heatmap_LD_arbre_9regions_v2.py
 """
 

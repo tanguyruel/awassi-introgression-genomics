@@ -20,7 +20,7 @@ strictement superposables aux leurs.
 
 Sortie : analyses/synthese_resultats/haplotype_sharing_all_groups/
 
-Pas cité directement dans l'Annexe A (le résultat rapporté vient du script 65), mais
+Pas cité directement dans l'Annexe A (le résultat rapporté vient du bootstrap_specificite_haplotypique.py), mais
 requis pour l'exécuter : 65 (et 69) importent ce fichier par nom de module, il doit
 rester dans le même dossier. Chemin PROJ ci-dessous en dur, à adapter si le dépôt est
 cloné ailleurs. Usage : python3 64_haplotype_sharing_all_groups_v1.py

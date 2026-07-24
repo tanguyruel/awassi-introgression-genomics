@@ -2,7 +2,7 @@
 """
 Spécificité haplotypique du P3, testée proprement.
 
-Deux corrections par rapport au script 64 :
+Deux corrections par rapport au partage_haplotypes_tous_groupes.py :
 
 1. L'espérance de la raréfaction est calculée EXACTEMENT, sans Monte-Carlo.
    Pour l'haplotype Awassi i et le groupe g comptant n_g haplotypes dont m_ig
@@ -12,7 +12,7 @@ Deux corrections par rapport au script 64 :
        p_ig = 1 − C(n_g − m_ig, k) / C(n_g, k)
 
    Le score du groupe est la moyenne des p_ig sur les 44 haplotypes Awassi.
-   L'écart-type entre tirages du script 64 n'est que du bruit de simulation :
+   L'écart-type entre tirages du partage_haplotypes_tous_groupes.py n'est que du bruit de simulation :
    il ne mesure PAS l'incertitude du résultat.
 
 2. L'incertitude réelle vient du petit nombre d'individus Awassi (22). On la
@@ -23,28 +23,33 @@ Deux corrections par rapport au script 64 :
 Sortie : analyses/synthese_resultats/haplotype_sharing_all_groups/
          Haplotype_specificity_bootstrap.tsv
 
-Script de référence pour "Bootstrap de spécificité" (cf. Annexe A du rapport de stage) —
-remplace le script 64 (Monte-Carlo) pour le résultat rapporté, mais l'importe encore pour
-les données de partage : IMPORTANT, 64_haplotype_sharing_all_groups_v1.py doit rester présent
-dans le même dossier (import par nom de module, pas par chemin relatif).
-Usage : python3 65_haplotype_specificity_bootstrap_v1.py
-Chemin PROJ ci-dessous en dur (machine d'origine) — à adapter si le dépôt est cloné ailleurs.
+Script de référence pour "Bootstrap de spécificité" (appelé "bootstrap_specificite_haplotypique.py" dans l'Annexe A du
+rapport de stage) — remplace le script "64" (Monte-Carlo, ici partage_haplotypes_tous_groupes.py)
+pour le résultat rapporté, mais l'importe encore pour les données de partage : IMPORTANT,
+partage_haplotypes_tous_groupes.py doit rester présent dans le même dossier (import dynamique
+par chemin de fichier, voir plus bas).
+Usage : python3 bootstrap_specificite_haplotypique.py
+Chemin PROJ ci-dessous en dur (machine d'origine) — à adapter si relancé ailleurs (sert
+uniquement à localiser les résultats déjà calculés, hors de ce dépôt).
 """
-# ── Imports : sys (chemin d'import), combinatoire, chemins, calcul numpy ──
-import sys, csv
+# ── Imports : combinatoire, chemins, import dynamique de module, calcul numpy ──
+import csv
+import importlib.util
 from math import comb
 from pathlib import Path
 import numpy as np
 
-PROJ = Path("/home/tanguyruel/Bureau/genome_complet_Awassi")  # chemin en dur à adapter
-sys.path.insert(0, str(PROJ / "scripts/synthese"))  # ajoute le dossier des scripts au chemin d'import Python
-import importlib
-# ── Import dynamique du script 64 (64_haplotype_sharing_all_groups_v1.py) comme
-# module, pour réutiliser ses fonctions et données (load_pop, read_haplotypes,
-# filter_snps, mismatch_matrix, REGIONS, GROUPS, PHASE) sans dupliquer le code ──
-m64 = importlib.import_module("64_haplotype_sharing_all_groups_v1")
+PROJ = Path("/home/tanguyruel/Bureau/genome_complet_Awassi")  # chemin en dur à adapter (dossier de travail, hors dépôt)
 
-OUT = PROJ / "analyses/synthese_resultats/haplotype_sharing_all_groups"  # dossier de sortie (partagé avec le script 64)
+# ── Import dynamique de partage_haplotypes_tous_groupes.py (même dossier que ce script),
+# pour réutiliser ses fonctions et données (load_pop, read_haplotypes, filter_snps,
+# mismatch_matrix, REGIONS, GROUPS, PHASE) sans dupliquer le code ──
+SCRIPT_PARTAGE = Path(__file__).with_name("partage_haplotypes_tous_groupes.py")
+spec = importlib.util.spec_from_file_location("partage_haplotypes", SCRIPT_PARTAGE)
+m64 = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(m64)  # exécute le script -> ses fonctions/variables deviennent accessibles via m64.xxx
+
+OUT = PROJ / "analyses/synthese_resultats/haplotype_sharing_all_groups"  # dossier de sortie (partagé avec partage_haplotypes_tous_groupes.py)
 K, N_BOOT, THRESH = 16, 2000, 0.01  # taille de tirage (raréfaction), nb de bootstraps, seuil "jumeau" (<1% de sites différents)
 CANDIDATES = ["Africa", "Asia", "Europe", "America", "Australia"]  # groupes P3 candidats testés (ME exclu)
 
@@ -61,21 +66,21 @@ def p_at_least_one(n, m, k):
 
 
 def main():
-    pop = m64.load_pop()  # groupes -> ensembles d'échantillons (fonction du script 64)
+    pop = m64.load_pop()  # groupes -> ensembles d'échantillons (fonction de partage_haplotypes_tous_groupes.py)
     rng = np.random.default_rng(7)  # générateur aléatoire reproductible (graine fixe) pour le bootstrap
     rows = []  # résultats accumulés (une ligne par région)
 
-    for rid, rel, chrom, start, end, p3best in m64.REGIONS:  # REGIONS défini dans le script 64
-        vcf = m64.PHASE / rel  # chemin complet du VCF phasé (PHASE défini dans le script 64)
-        H, samples = m64.read_haplotypes(vcf, chrom, start, end)  # charge la matrice haplotypes x SNP (fonction du script 64)
+    for rid, rel, chrom, start, end, p3best in m64.REGIONS:  # REGIONS défini dans partage_haplotypes_tous_groupes.py
+        vcf = m64.PHASE / rel  # chemin complet du VCF phasé (PHASE défini dans partage_haplotypes_tous_groupes.py)
+        H, samples = m64.read_haplotypes(vcf, chrom, start, end)  # charge la matrice haplotypes x SNP (fonction de partage_haplotypes_tous_groupes.py)
         idx = {g: np.array([j for i, s in enumerate(samples) if s in pop[g] for j in (2 * i, 2 * i + 1)])
-               for g in m64.GROUPS}  # indices d'haplotypes par groupe (GROUPS défini dans le script 64)
+               for g in m64.GROUPS}  # indices d'haplotypes par groupe (GROUPS défini dans partage_haplotypes_tous_groupes.py)
         used = np.concatenate([idx[g] for g in m64.GROUPS])  # tous les haplotypes utilisés, dans l'ordre des groupes
         H = H[used]  # restreint et réordonne la matrice par groupe
         off, pos = 0, {}
         for g in m64.GROUPS:
             pos[g] = np.arange(off, off + len(idx[g])); off += len(idx[g])  # plage d'indices de chaque groupe
-        H, n_snps = m64.filter_snps(H)  # filtre qualité des SNP (fonction du script 64)
+        H, n_snps = m64.filter_snps(H)  # filtre qualité des SNP (fonction de partage_haplotypes_tous_groupes.py)
         A = H[pos["Awassi"]]                       # 44 haplotypes = 22 individus × 2
         n_ind = A.shape[0] // 2  # nombre d'individus Awassi
 
@@ -83,7 +88,7 @@ def main():
         M, NG = {}, {}
         for g in CANDIDATES:
             B = H[pos[g]]  # haplotypes du groupe candidat g
-            D = m64.mismatch_matrix(A, B)  # fraction de mésappariement Awassi x g (fonction du script 64)
+            D = m64.mismatch_matrix(A, B)  # fraction de mésappariement Awassi x g (fonction de partage_haplotypes_tous_groupes.py)
             M[g] = (D < THRESH).sum(axis=1)  # nb de "jumeaux" (< 1% mésappariement) par haplotype Awassi, dans g
             NG[g] = B.shape[0]  # effectif total du groupe g
 

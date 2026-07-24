@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Script 13b v9 — FST SNP par SNP (per-SNP, vcftools --weir-fst-pop SANS fenêtre) + fd + LD.
+FST SNP par SNP (per-SNP, vcftools --weir-fst-pop SANS fenêtre) + fd + LD, sur une région donnée.
 
 Différence majeure vs v8 :
 - Le panel FST n'utilise plus les fenêtres 20kb/step5kb chevauchantes.

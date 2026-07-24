@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Script 10 — Phasage BEAGLE des 5 régions A sans VCF phasé existant
+# Phasage BEAGLE des 5 régions A sans VCF phasé existant
 # Entrée  : analyses/fst/local_20kb_step5kb_sep_EU_AM_AUS_v1/filtered_vcf/chrN.PASS_biallelic_snps.vcf.gz
 # Sortie  : analyses/phasing_beagle/Phasing_Beagle_v1_5regions/
 # Méthode : extraction ±1Mb autour de chaque région → phasage BEAGLE → index

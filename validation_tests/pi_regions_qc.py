@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Script 30 — Pi 9 régions, fenêtres 20kb/pas 5kb, AVEC filtres QC explicites
-et 1 plot par région (corrige script 29 : légende absente sur la figure
-combinée, pas de filtre missingness, pas de flag qualité par palier de SNPs).
+Pi sur les 9 régions candidates, fenêtres 20kb/pas 5kb, AVEC filtres QC explicites
+et 1 plot par région (corrige une version antérieure du dépôt de travail : légende absente
+sur la figure combinée, pas de filtre missingness, pas de flag qualité par palier de SNPs).
 
 Filtres SNP appliqués (demande utilisateur 07/07) :
   - PASS uniquement (bcftools -f PASS)

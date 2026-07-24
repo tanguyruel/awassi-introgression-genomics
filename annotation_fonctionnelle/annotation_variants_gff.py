@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Script 40 — Annotation fonctionnelle des SNP des 9 régions candidates (étape 1
-de l'annotation, zoom géo/race/individu à venir dans les scripts suivants).
+Annotation fonctionnelle des SNP des 9 régions candidates (étape 1 de l'annotation ;
+un zoom géo/race/individu plus poussé existe dans le dépôt de travail, non repris ici).
 
 Généralise la méthode déjà établie pour KIT (scripts/kit/02_annotate_KIT_variants_gene_features.py) :
 parsing du GFF Oar_v4.0, classification de chaque SNP par feature chevauchante

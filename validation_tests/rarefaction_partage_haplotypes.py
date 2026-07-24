@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """
-Script 34 — Contrôle par raréfaction du partage d'haplotypes Awassi/P3.
+Contrôle par raréfaction du partage d'haplotypes Awassi/P3.
 
-Problème signalé : le partage d'haplotypes (scripts 33) dépend du nombre
+Problème signalé : le partage d'haplotypes brut (calculé en amont, dans le dépôt de
+travail) dépend du nombre
 d'haplotypes disponibles dans le groupe P3 — un grand groupe (Africa n=334
 haplotypes) a mécaniquement plus de chances de contenir par hasard un
 haplotype proche qu'un petit groupe (America n=16). Pour comparer les 9
@@ -10,7 +11,7 @@ régions à armes égales, on sous-échantillonne chaque groupe P3 à un nombre
 d'haplotypes commun (= la plus petite taille de P3 parmi les 9 régions,
 America n=16) et on répète le tirage N_ITER fois.
 
-Réutilise les allele_string déjà calculées par le script 26 (*_row_order.tsv),
+Réutilise les allele_string déjà calculées par le heatmap_haplotypes_arbre_ld.py (*_row_order.tsv),
 pas de nouvelle extraction VCF.
 
 Sortie : analyses/synthese_resultats/rarefaction_haplotype_sharing_9regions/
@@ -26,7 +27,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-HEATMAP_DIR = Path("analyses/haplotype_heatmap/Awassi_haplo/results/figures_finales/regions_A_9regions_v2")  # dossier des sorties du script 26 (row_order.tsv)
+HEATMAP_DIR = Path("analyses/haplotype_heatmap/Awassi_haplo/results/figures_finales/regions_A_9regions_v2")  # dossier des sorties du heatmap_haplotypes_arbre_ld.py (row_order.tsv)
 OUTDIR = Path("analyses/synthese_resultats/rarefaction_haplotype_sharing_9regions")  # dossier de sortie de la table de raréfaction
 OUTDIR.mkdir(parents=True, exist_ok=True)  # crée le dossier de sortie s'il n'existe pas
 
@@ -68,7 +69,7 @@ def min_mismatch_fracs(A, B):
 
 
 def load_matrices(prefix, p3):
-    df = pd.read_csv(HEATMAP_DIR / f"{prefix}_row_order.tsv", sep="\t")  # table d'haplotypes générée par le script 26
+    df = pd.read_csv(HEATMAP_DIR / f"{prefix}_row_order.tsv", sep="\t")  # table d'haplotypes générée par le heatmap_haplotypes_arbre_ld.py
     awassi = df[df["group"] == "Awassi"]  # sous-table des haplotypes Awassi
     p3_df = df[df["group"] == p3]  # sous-table des haplotypes du groupe P3 de comparaison
     A = np.stack([string_to_array(s) for s in awassi["allele_string"]])  # matrice haplotypes Awassi x SNP

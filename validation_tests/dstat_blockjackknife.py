@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Script 27 — D-stat + Z-score (block-jackknife) sur les 9 régions candidates,
+D-stat + Z-score (block-jackknife) sur les 9 régions candidates,
 fenêtre élargie à 150kb (centrée sur chaque région) pour un jackknife robuste.
 
 Reprend le même code que le dossier dstat (scripts/05_dstat/03_dstat_small_windows_zscore.py

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Script 69 — CCDC91 : reprise du test de partage haplotypique sur le cœur du pic.
+CCDC91 : reprise du test de partage haplotypique sur le cœur du pic.
 
 Contexte
 --------
@@ -17,13 +17,14 @@ Le détail fenêtre par fenêtre montre que le signal n'y est pas homogène :
     186,105–186,125   fd 0,884   Africa
 
 Les tests publiés ont porté sur la région entière, qui contient le pic (vérifié
-par le script 68). Mais elle contient aussi une queue de 20 kb où le groupe
-candidat n'est plus l'Asie. Si cette queue dilue le signal, le verdict négatif
-obtenu sur la région entière pourrait être un artefact de fenêtrage.
+séparément par une analyse fenêtre par fenêtre du fd). Mais elle contient aussi
+une queue de 20 kb où le groupe candidat n'est plus l'Asie. Si cette queue dilue
+le signal, le verdict négatif obtenu sur la région entière pourrait être un
+artefact de fenêtrage.
 
 Ce script rejoue donc le test sur trois fenêtres emboîtées, avec exactement la
-même méthode (mêmes fonctions du script 64, même raréfaction à 16 haplotypes,
-même bootstrap sur les 22 individus Awassi) :
+même méthode que partage_haplotypes_tous_groupes.py (même raréfaction à 16
+haplotypes, même bootstrap sur les 22 individus Awassi) :
 
     A. région entière      186,075–186,125   (ce qui a été publié)
     B. cœur Asia           186,075–186,115   (fenêtres dont le P3 est l'Asie)
@@ -34,29 +35,32 @@ conclusion sur CCDC91 est solide. S'il change, la région doit être rouverte.
 
 Sortie : analyses/synthese_resultats/CCDC91_peak_core_retest.tsv
 
-Script de référence pour "CCDC91 — reprise sur le cœur du pic" (§3.6, cf. Annexe A
-du rapport de stage) — cas particulier, pas une méthode générique réutilisable
-telle quelle pour d'autres régions.
-IMPORTANT : importe 64_haplotype_sharing_all_groups_v1.py par nom de module — ce fichier
-doit rester présent dans le même dossier. Chemin PROJ ci-dessous en dur, à adapter si le
-dépôt est cloné ailleurs.
-Usage : python3 69_ccdc91_peak_core_retest_v1.py
+Script de référence pour "CCDC91 — reprise sur le cœur du pic" (§3.6, appelé
+"ccdc91_retest_pic.py" dans l'Annexe A du rapport de stage) — cas particulier, pas une
+méthode générique réutilisable telle quelle pour d'autres régions.
+IMPORTANT : importe partage_haplotypes_tous_groupes.py (import dynamique par chemin de
+fichier, voir plus bas) — ce fichier doit rester présent dans le même dossier.
+Chemin PROJ ci-dessous en dur, à adapter si relancé ailleurs (sert uniquement à localiser
+le VCF déjà phasé, hors de ce dépôt).
+Usage : python3 ccdc91_retest_pic.py
 """
 
-# ── Imports : import dynamique de module, sys, combinatoire, chemins, calcul ──
-import importlib
-import sys
+# ── Imports : import dynamique de module, combinatoire, chemins, calcul ──
+import importlib.util
 from math import comb
 from pathlib import Path
 
 import numpy as np
 
-PROJ = Path("/home/tanguyruel/Bureau/genome_complet_Awassi")  # chemin en dur à adapter
-sys.path.insert(0, str(PROJ / "scripts/synthese"))  # ajoute le dossier des scripts au chemin d'import Python
-# ── Import dynamique du script 64 (64_haplotype_sharing_all_groups_v1.py) comme
-# module, pour réutiliser ses fonctions (load_pop, read_haplotypes, filter_snps,
+PROJ = Path("/home/tanguyruel/Bureau/genome_complet_Awassi")  # chemin en dur à adapter (dossier de travail, hors dépôt)
+
+# ── Import dynamique de partage_haplotypes_tous_groupes.py (même dossier que ce
+# script), pour réutiliser ses fonctions (load_pop, read_haplotypes, filter_snps,
 # mismatch_matrix) sans dupliquer le code ──
-m64 = importlib.import_module("64_haplotype_sharing_all_groups_v1")
+SCRIPT_PARTAGE = Path(__file__).with_name("partage_haplotypes_tous_groupes.py")
+spec = importlib.util.spec_from_file_location("partage_haplotypes", SCRIPT_PARTAGE)
+m64 = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(m64)  # exécute le script -> ses fonctions deviennent accessibles via m64.xxx
 
 VCF = (PROJ / "analyses/phasing_beagle/Phasing_Beagle_v1_5regions/phased/"
        "chr3_186.07_186.12Mb.beagle_phased.vcf.gz")  # VCF phasé de la région CCDC91
@@ -77,7 +81,7 @@ WINDOWS = [  # les 3 fenêtres emboîtées à comparer (tag, start, end, descrip
 def rarefied_score(D_by_group, group, k=K):
     """Probabilité moyenne qu'un tirage de k haplotypes du groupe contienne
     un jumeau (< THRESH de sites divergents) d'un haplotype Awassi donné.
-    Calcul hypergéométrique exact, identique au script 34."""
+    Calcul hypergéométrique exact, identique au rarefaction_partage_haplotypes.py."""
     D = D_by_group[group]  # matrice de mésappariement Awassi x groupe, pour ce groupe
     n = D.shape[1]  # effectif du groupe (nb d'haplotypes)
     if n < k:
@@ -95,12 +99,12 @@ def rarefied_score(D_by_group, group, k=K):
 
 
 def main():
-    pops = m64.load_pop()  # groupes -> ensembles d'échantillons (fonction du script 64)
+    pops = m64.load_pop()  # groupes -> ensembles d'échantillons (fonction de partage_haplotypes_tous_groupes.py)
     rows = []  # résultats accumulés (une ligne par fenêtre)
 
     for tag, start, end, note in WINDOWS:
-        H, samples = m64.read_haplotypes(VCF, "3", start, end)  # charge la matrice haplotypes x SNP de la fenêtre (fonction du script 64)
-        H, n_snps = m64.filter_snps(H)  # filtre qualité des SNP (fonction du script 64)
+        H, samples = m64.read_haplotypes(VCF, "3", start, end)  # charge la matrice haplotypes x SNP de la fenêtre (fonction de partage_haplotypes_tous_groupes.py)
+        H, n_snps = m64.filter_snps(H)  # filtre qualité des SNP (fonction de partage_haplotypes_tous_groupes.py)
 
         # index des haplotypes par groupe (2 haplotypes par individu)
         idx = {}
@@ -111,7 +115,7 @@ def main():
                 idx[g] = np.array(cols)
         A = H[idx["Awassi"]]  # sous-matrice des haplotypes Awassi
         D_by_group = {g: m64.mismatch_matrix(A, H[idx[g]])
-                      for g in CANDIDATES if g in idx}  # mésappariement Awassi x chaque groupe candidat (fonction du script 64)
+                      for g in CANDIDATES if g in idx}  # mésappariement Awassi x chaque groupe candidat (fonction de partage_haplotypes_tous_groupes.py)
 
         scores = {g: rarefied_score(D_by_group, g) for g in D_by_group}  # score de raréfaction exact par groupe
         best_other = max((g for g in scores if g != P3_REGION),
