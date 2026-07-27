@@ -19,7 +19,7 @@ Océanie), signal compatible avec une introgression ancienne.
 *Logo LECA (Laboratoire d'Écologie Alpine, UMR CNRS/UGA/USMB 5553) reproduit à titre
 d'affiliation ; propriété de l'institution, non couvert par la licence MIT de ce dépôt.*
 
-## En bref, pour qui ne connaît pas la génétique
+## En bref, la génétique pour les nuls
 
 Un mouton hérite de son ADN de ses ancêtres. Quand deux populations longtemps séparées se
 recroisent, des fragments d'ADN de l'une peuvent rester durablement présents chez l'autre :
@@ -146,8 +146,7 @@ sur demande auprès de l'auteur.
 ## Citation
 
 Code disponible pour accompagner : Ruel T., *Introgression génomique chez le mouton
-Awassi*, rapport de stage LECA, 2026. *(mettre à jour avec la référence définitive de
-l'article une fois publié.)*
+Awassi*, rapport de stage LECA, 2026.
 
 ## Licence
 
