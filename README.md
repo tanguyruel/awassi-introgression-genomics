@@ -1,10 +1,66 @@
-# Awassi Introgression Genomics
+<p align="center">
+  <img src="assets/logo_leca.png" alt="Logo LECA" width="220">
+</p>
+
+<h1 align="center">Awassi Introgression Genomics</h1>
+
+<p align="center">
+  <a href="LICENSE"><img alt="Licence MIT" src="https://img.shields.io/badge/licence-MIT-blue.svg"></a>
+  <img alt="Python" src="https://img.shields.io/badge/python-%E2%89%A53.8-blue.svg">
+  <img alt="Stage LECA 2026" src="https://img.shields.io/badge/stage-LECA%202026-4c9a2a.svg">
+</p>
 
 Scripts d'analyse accompagnant le rapport de stage *« Introgression génomique chez le
 mouton Awassi — signaux locaux d'introgression et validation multi-critères »* (Tanguy Ruel,
-LECA). Recherche de régions du génome où la race Awassi (Moyen-Orient) présente une
+[LECA](https://leca.osug.fr/)). Recherche de régions du génome où la race Awassi (Moyen-Orient) présente une
 affinité locale anormale avec un autre groupe géographique (Afrique, Asie, Europe, Amérique,
 Océanie), signal compatible avec une introgression ancienne.
+
+*Logo LECA (Laboratoire d'Écologie Alpine, UMR CNRS/UGA/USMB 5553) reproduit à titre
+d'affiliation ; propriété de l'institution, non couvert par la licence MIT de ce dépôt.*
+
+## En bref, pour qui ne connaît pas la génétique
+
+Un mouton hérite de son ADN de ses ancêtres. Quand deux populations longtemps séparées se
+recroisent, des fragments d'ADN de l'une peuvent rester durablement présents chez l'autre :
+c'est l'**introgression**. Ce stage cherche des traces de ce phénomène chez le mouton
+Awassi (Moyen-Orient) : à certains endroits précis du génome, ressemble-t-il un peu plus que
+prévu par hasard à des moutons d'Europe, d'Afrique, d'Asie ou d'Amérique ? Si oui, c'est le
+signe qu'un échange génétique ancien a eu lieu à cet endroit précis.
+
+Les scripts de ce dépôt : (1) décrivent la structure génétique globale des populations
+étudiées, (2) balayent le génome pour repérer des zones suspectes, (3) vérifient par
+plusieurs méthodes indépendantes que chaque zone candidate est un vrai signal et pas du
+bruit statistique, puis (4) regardent quels gènes se trouvent dans ces zones.
+
+## Glossaire express
+
+| Terme | Sens simple |
+|---|---|
+| SNP | Une position du génome où l'ADN diffère d'un individu à l'autre (une « lettre » variable). |
+| VCF | Format de fichier qui liste les SNP observés chez tous les individus séquencés. |
+| FST | Différenciation génétique entre deux groupes à un endroit du génome (0 = identiques, 1 = totalement différents). |
+| fd / D-stat | Mesurent si un groupe partage anormalement plus d'ADN avec un autre groupe que prévu — signal d'introgression. |
+| dXY | Divergence génétique brute entre deux groupes, indépendante de leur diversité interne. |
+| π (pi) | Diversité génétique à l'intérieur d'un groupe. |
+| LD (déséquilibre de liaison) | Tendance de deux positions du génome à être héritées ensemble ; un LD élevé et localisé peut trahir un bloc d'ADN introgressé récent. |
+| PCA / ADMIXTURE | Méthodes qui résument la structure génétique globale d'un jeu d'individus (combien de groupes ancestraux, qui ressemble à qui). |
+| Phasage | Reconstitution de quel allèle vient de quel chromosome parental, pour reconstruire des haplotypes. |
+| Haplotype | Combinaison de variants portée ensemble sur un même chromosome. |
+| Bootstrap / jackknife | Méthodes de ré-échantillonnage statistique pour estimer la fiabilité d'un résultat. |
+
+## Déroulé du pipeline
+
+```mermaid
+flowchart TD
+    A["VCF filtrés (25 chromosomes)"] --> B["population_structure/<br>PCA · ADMIXTURE"]
+    A --> C["region_selection/<br>FST local · fd genome-wide"]
+    C --> D["Sélection des régions candidates<br>score combiné + intersection Manhattan"]
+    B -.contexte de structure.-> D
+    D --> E["validation_tests/<br>D-stat · dXY · π · LD · phasage ·<br>partage d'haplotypes · bootstrap · F/Ho"]
+    E --> F["annotation_fonctionnelle/<br>annotation GFF des SNP candidats"]
+    F --> G["Régions candidates validées<br>+ gènes associés"]
+```
 
 ## Contenu de ce dépôt
 
