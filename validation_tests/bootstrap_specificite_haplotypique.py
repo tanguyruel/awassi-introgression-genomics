@@ -32,7 +32,6 @@ Usage : python3 bootstrap_specificite_haplotypique.py
 Chemin PROJ ci-dessous en dur (machine d'origine) — à adapter si relancé ailleurs (sert
 uniquement à localiser les résultats déjà calculés, hors de ce dépôt).
 """
-# ── Imports : combinatoire, chemins, import dynamique de module, calcul numpy ──
 import csv
 import importlib.util
 from math import comb
@@ -41,9 +40,9 @@ import numpy as np
 
 PROJ = Path("/home/tanguyruel/Bureau/genome_complet_Awassi")  # chemin en dur à adapter (dossier de travail, hors dépôt)
 
-# ── Import dynamique de partage_haplotypes_tous_groupes.py (même dossier que ce script),
+# Import dynamique de partage_haplotypes_tous_groupes.py (même dossier que ce script),
 # pour réutiliser ses fonctions et données (load_pop, read_haplotypes, filter_snps,
-# mismatch_matrix, REGIONS, GROUPS, PHASE) sans dupliquer le code ──
+# mismatch_matrix, REGIONS, GROUPS, PHASE) sans dupliquer le code
 SCRIPT_PARTAGE = Path(__file__).with_name("partage_haplotypes_tous_groupes.py")
 spec = importlib.util.spec_from_file_location("partage_haplotypes", SCRIPT_PARTAGE)
 m64 = importlib.util.module_from_spec(spec)
@@ -57,7 +56,7 @@ CANDIDATES = ["Africa", "Asia", "Europe", "America", "Australia"]  # groupes P3 
 def p_at_least_one(n, m, k):
     """Proba qu'un tirage sans remise de k haplotypes parmi n en contienne >= 1 des m jumeaux."""
     if m == 0:
-        return 0.0  # aucun jumeau dans le groupe -> probabilité nulle
+        return 0.0
     if n - m < k:
         return 1.0  # moins de k non-jumeaux disponibles -> un jumeau est certain dans le tirage
     # probabilité complémentaire : 1 - P(aucun jumeau tiré)
@@ -68,7 +67,7 @@ def p_at_least_one(n, m, k):
 def main():
     pop = m64.load_pop()  # groupes -> ensembles d'échantillons (fonction de partage_haplotypes_tous_groupes.py)
     rng = np.random.default_rng(7)  # générateur aléatoire reproductible (graine fixe) pour le bootstrap
-    rows = []  # résultats accumulés (une ligne par région)
+    rows = []
 
     for rid, rel, chrom, start, end, p3best in m64.REGIONS:  # REGIONS défini dans partage_haplotypes_tous_groupes.py
         vcf = m64.PHASE / rel  # chemin complet du VCF phasé (PHASE défini dans partage_haplotypes_tous_groupes.py)
@@ -76,18 +75,18 @@ def main():
         idx = {g: np.array([j for i, s in enumerate(samples) if s in pop[g] for j in (2 * i, 2 * i + 1)])
                for g in m64.GROUPS}  # indices d'haplotypes par groupe (GROUPS défini dans partage_haplotypes_tous_groupes.py)
         used = np.concatenate([idx[g] for g in m64.GROUPS])  # tous les haplotypes utilisés, dans l'ordre des groupes
-        H = H[used]  # restreint et réordonne la matrice par groupe
+        H = H[used]
         off, pos = 0, {}
         for g in m64.GROUPS:
             pos[g] = np.arange(off, off + len(idx[g])); off += len(idx[g])  # plage d'indices de chaque groupe
         H, n_snps = m64.filter_snps(H)  # filtre qualité des SNP (fonction de partage_haplotypes_tous_groupes.py)
         A = H[pos["Awassi"]]                       # 44 haplotypes = 22 individus × 2
-        n_ind = A.shape[0] // 2  # nombre d'individus Awassi
+        n_ind = A.shape[0] // 2
 
         # m[i, g] = nb de jumeaux de l'haplotype Awassi i dans le groupe g
         M, NG = {}, {}
         for g in CANDIDATES:
-            B = H[pos[g]]  # haplotypes du groupe candidat g
+            B = H[pos[g]]
             D = m64.mismatch_matrix(A, B)  # fraction de mésappariement Awassi x g (fonction de partage_haplotypes_tous_groupes.py)
             M[g] = (D < THRESH).sum(axis=1)  # nb de "jumeaux" (< 1% mésappariement) par haplotype Awassi, dans g
             NG[g] = B.shape[0]  # effectif total du groupe g
@@ -100,8 +99,8 @@ def main():
         wins, margins = 0, []
         for _ in range(N_BOOT):
             ind = rng.integers(0, n_ind, n_ind)  # tirage avec remise de n_ind individus (indices d'individus)
-            hap = np.concatenate([[2 * i, 2 * i + 1] for i in ind])  # les 2 haplotypes de chaque individu tiré
-            sc = {g: 100 * P[g][hap].mean() for g in CANDIDATES}  # score de chaque groupe sur cet échantillon bootstrap
+            hap = np.concatenate([[2 * i, 2 * i + 1] for i in ind])
+            sc = {g: 100 * P[g][hap].mean() for g in CANDIDATES}
             best_other = max((g for g in CANDIDATES if g != p3best), key=lambda g: sc[g])  # meilleur concurrent du P3 retenu
             margins.append(sc[p3best] - sc[best_other])  # marge du P3 retenu sur son meilleur concurrent
             if sc[p3best] >= max(sc.values()):
@@ -115,17 +114,17 @@ def main():
             "score_P3": round(score[p3best], 1),
             "best_group": best_obs, "score_best": round(score[best_obs], 1),
             "margin_P3_vs_best_other": round(score[p3best] - max(score[g] for g in CANDIDATES if g != p3best), 1),  # marge observée (sans bootstrap)
-            "boot_margin_lo": round(float(lo), 1), "boot_margin_hi": round(float(hi), 1),  # bornes de l'IC 95% bootstrap
-            "P_P3_is_best": round(wins / N_BOOT, 3),  # proportion de tirages bootstrap où P3 est le meilleur groupe
-            **{f"score_{g}": round(score[g], 1) for g in CANDIDATES},  # score détaillé de chaque groupe candidat
+            "boot_margin_lo": round(float(lo), 1), "boot_margin_hi": round(float(hi), 1),
+            "P_P3_is_best": round(wins / N_BOOT, 3),
+            **{f"score_{g}": round(score[g], 1) for g in CANDIDATES},
         })
         print(f"{rid:28s} P3={p3best:10s} score_P3={score[p3best]:5.1f}  meilleur={best_obs:10s} "
               f"marge={rows[-1]['margin_P3_vs_best_other']:+6.1f} [{lo:+.1f};{hi:+.1f}]  P(P3 best)={wins/N_BOOT:.2f}")
 
     f = OUT / "Haplotype_specificity_bootstrap.tsv"
     with open(f, "w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=list(rows[0].keys()), delimiter="\t")  # écrivain TSV avec en-têtes
-        w.writeheader(); w.writerows(rows)  # écrit l'en-tête puis toutes les lignes
+        w = csv.DictWriter(fh, fieldnames=list(rows[0].keys()), delimiter="\t")
+        w.writeheader(); w.writerows(rows)
     print("\nÉcrit :", f)
 
 

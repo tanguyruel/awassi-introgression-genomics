@@ -6,27 +6,27 @@
 # IMPORTANT : nécessite le binaire ADMIXTURE (Alexander et al. 2009), pas fourni
 # dans ce dépôt. À télécharger depuis https://dalexander.github.io/admixture/
 # puis adapter la variable ADMIXTURE ci-dessous vers l'exécutable téléchargé.
-set -euo pipefail  # arrête le script en cas d'erreur ou de variable non définie
-cd ~/Bureau/genome_complet_Awassi/analyses/admixture_v2  # se place dans le dossier de l'analyse ADMIXTURE
+set -euo pipefail
+cd ~/Bureau/genome_complet_Awassi/analyses/admixture_v2
 
 ADMIXTURE=/home/tanguyruel/Bureau/3718_SNP_Awassi/test_3718SNPs/software/admixture_linux-1.4.0/admixture  # chemin local à adapter (voir note ci-dessus)
-BED="genomewide_pruned.bed"  # fichier PLINK bed en entrée (SNP LD-prunés genome-wide)
-THREADS=6  # nombre de threads utilisés par ADMIXTURE
+BED="genomewide_pruned.bed"
+THREADS=6
 
-mkdir -p admixture_runs  # crée le dossier de sortie des runs
-cd admixture_runs  # se place dans ce dossier
-ln -sf ../genomewide_pruned.bed .  # lien symbolique vers le bed (ADMIXTURE le lit en local)
-ln -sf ../genomewide_pruned.bim .  # idem pour le bim
-ln -sf ../genomewide_pruned.fam .  # idem pour le fam
+mkdir -p admixture_runs
+cd admixture_runs
+ln -sf ../genomewide_pruned.bed .  # ADMIXTURE lit ses fichiers en local, d'où les liens symboliques
+ln -sf ../genomewide_pruned.bim .
+ln -sf ../genomewide_pruned.fam .
 
-> cv_errors.txt  # crée/vide le fichier récapitulatif des erreurs de validation croisée
-for K in 2 3 4 5 6 7 8; do  # boucle sur chaque valeur de K testée
+> cv_errors.txt
+for K in 2 3 4 5 6 7 8; do
   echo "=== K=${K} ==="
-  # lance ADMIXTURE pour ce K, validation croisée 10-fold (--cv=10), log redirigé dans un fichier
+  # --cv=10 : validation croisée 10-fold
   "$ADMIXTURE" --cv=10 -j${THREADS} genomewide_pruned.bed ${K} \
     > log_K${K}.out 2>&1
-  cv=$(grep "CV error" log_K${K}.out | awk '{print $NF}')  # extrait la valeur du CV error dans le log
-  echo -e "${K}\t${cv}" >> cv_errors.txt  # ajoute K et son CV error au fichier récapitulatif
+  cv=$(grep "CV error" log_K${K}.out | awk '{print $NF}')
+  echo -e "${K}\t${cv}" >> cv_errors.txt
   echo "  K=${K} CV error = ${cv}"
 done
 

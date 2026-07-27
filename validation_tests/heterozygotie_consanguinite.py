@@ -29,7 +29,6 @@ Usage : python3 56_het_inbreeding_v1.py
 (nécessite les sorties de 50_pi_genomewide_baseline_v1.py et 40_annotate_variants_9regions_v1.py)
 """
 
-# subprocess : appelle bcftools en ligne de commande ; pathlib : gestion des chemins
 import subprocess
 from pathlib import Path
 
@@ -39,14 +38,14 @@ import pandas as pd
 BASE = Path("analyses/synthese_resultats")
 GENOMEWIDE_VCF = BASE / "pi_genomewide_baseline" / "sampled_windows_merged.vcf.gz"  # échantillon de fond (pi_genomewide_baseline.py)
 REGION_VCF_DIR = BASE / "annotation_9regions" / "vcf"  # VCF par région candidate (annotation_variants_gff.py)
-ZONE_POP_DIR = Path("analyses/fst/popmaps_separees_v1")  # listes d'échantillons par zone géo
-RACE_DIR = Path("analyses/LD/popmaps_races_v1")  # listes d'échantillons par race
+ZONE_POP_DIR = Path("analyses/fst/popmaps_separees_v1")
+RACE_DIR = Path("analyses/LD/popmaps_races_v1")
 OUTDIR = BASE / "het_inbreeding"
-OUTDIR.mkdir(parents=True, exist_ok=True)  # crée le dossier de sortie si absent
+OUTDIR.mkdir(parents=True, exist_ok=True)
 
 ZONES = ["Awassi", "MiddleEastNonAwassi", "Africa", "Asia", "Europe", "America", "Australia"]
-race_map = pd.read_csv(RACE_DIR / "race_to_geo_group_mapping.tsv", sep="\t")  # table race -> zone géo
-slug_to_geo = dict(zip(race_map["race_slug"], race_map["geo_group"]))  # dictionnaire race -> zone
+race_map = pd.read_csv(RACE_DIR / "race_to_geo_group_mapping.tsv", sep="\t")
+slug_to_geo = dict(zip(race_map["race_slug"], race_map["geo_group"]))
 RACES = sorted(p.stem for p in RACE_DIR.glob("*.txt"))  # une race par fichier liste trouvé
 
 # Les 9 régions candidates avec leur P3 (groupe le plus proche localement) déjà identifié
@@ -59,11 +58,9 @@ REGIONS = {
 
 
 def load_list(path):
-    # lit un fichier texte, un identifiant d'échantillon par ligne
     return [x.strip() for x in open(path) if x.strip()]
 
 
-# dictionnaire {nom_du_groupe: liste d'échantillons}, pour les 7 zones et pour chaque race
 zone_samples = {z: load_list(ZONE_POP_DIR / f"{z}.txt") for z in ZONES}
 race_samples = {r: load_list(RACE_DIR / f"{r}.txt") for r in RACES}
 # GROUPS réunit zones et races dans un seul dict, clé = (type, nom) -> tous les groupes traités pareil
@@ -71,16 +68,15 @@ GROUPS = {**{("zone", z): zone_samples[z] for z in ZONES}, **{("race", r): race_
 
 
 def gt_alt_count(gt):
-    # convertit un génotype VCF (ex "0/1", "1|1") en nombre d'allèles alternatifs (0, 1 ou 2)
-    gt = gt.split(":")[0]  # ne garde que le champ GT (avant le premier ":")
+    gt = gt.split(":")[0]
     if gt in {"./.", ".|.", "."}:
-        return np.nan  # génotype manquant
-    sep = "|" if "|" in gt else "/"  # phasé ("|") ou non phasé ("/")
+        return np.nan
+    sep = "|" if "|" in gt else "/"
     parts = gt.split(sep)
     if len(parts) != 2 or "." in parts:
-        return np.nan  # génotype incomplet/invalide
+        return np.nan
     try:
-        return int(parts[0]) + int(parts[1])  # somme des 2 allèles = dosage 0/1/2
+        return int(parts[0]) + int(parts[1])
     except ValueError:
         return np.nan
 
@@ -88,8 +84,8 @@ def gt_alt_count(gt):
 def compute_het_f(vcf_path):
     """Une lecture du VCF -> matrice (n_sites, n_samples) alt_count, puis F/Ho
     pour chaque groupe défini dans GROUPS, en un seul passage vectorisé."""
-    samples = subprocess.check_output(["bcftools", "query", "-l", str(vcf_path)], text=True).splitlines()  # liste des échantillons du VCF
-    sample_idx = {s: i for i, s in enumerate(samples)}  # position de chaque échantillon dans les colonnes
+    samples = subprocess.check_output(["bcftools", "query", "-l", str(vcf_path)], text=True).splitlines()
+    sample_idx = {s: i for i, s in enumerate(samples)}
 
     # une seule lecture du VCF : un génotype par échantillon et par site, sur toute la longueur du fichier
     txt = subprocess.check_output(
@@ -97,8 +93,8 @@ def compute_het_f(vcf_path):
     )
     rows = []
     for line in txt.splitlines():
-        gts = line.split("\t")[1:]  # génotypes de tous les échantillons pour ce site
-        rows.append([gt_alt_count(gt) for gt in gts])  # converti en dosage 0/1/2/NaN
+        gts = line.split("\t")[1:]
+        rows.append([gt_alt_count(gt) for gt in gts])
     mat = np.array(rows, dtype=float)  # (n_sites, n_samples), valeurs 0/1/2/NaN
 
     is_het = mat == 1  # masque : génotype hétérozygote (dosage=1)
@@ -106,13 +102,13 @@ def compute_het_f(vcf_path):
 
     results = {}
     for (kind, name), sample_list in GROUPS.items():
-        idx = np.array([sample_idx[s] for s in sample_list if s in sample_idx], dtype=int)  # colonnes du groupe
+        idx = np.array([sample_idx[s] for s in sample_list if s in sample_idx], dtype=int)
         if len(idx) == 0:
-            results[(kind, name)] = (np.nan, np.nan, 0)  # groupe vide (aucun échantillon dans ce VCF)
+            results[(kind, name)] = (np.nan, np.nan, 0)
             continue
-        sub_called = is_called[:, idx]  # sous-matrice "appelé" restreinte au groupe
-        sub_alt = mat[:, idx]  # sous-matrice dosages restreinte au groupe
-        n_called_per_site = sub_called.sum(axis=1)  # nb d'individus appelés à chaque site, dans ce groupe
+        sub_called = is_called[:, idx]
+        sub_alt = mat[:, idx]
+        n_called_per_site = sub_called.sum(axis=1)
 
         # Fréquence allélique p du groupe à chaque site (>=2 appelés)
         alt_sum = np.where(sub_called, sub_alt, 0).sum(axis=1)
@@ -171,7 +167,7 @@ def rows_from_results(results, extra=None):
             row["group"] = name
         else:
             row["race"] = name
-            row["geo_group"] = slug_to_geo.get(name, "?")  # rattache la race à sa zone géo
+            row["geo_group"] = slug_to_geo.get(name, "?")
         if extra:
             row.update(extra)  # ajoute des colonnes fixes (ex: region_id, P3_best)
         rows.append((kind, row))
@@ -180,14 +176,14 @@ def rows_from_results(results, extra=None):
 
 # ── 1. Genome-wide ────────────────────────────────────────────────────────────
 print("Genome-wide : lecture + calcul (une seule passe)...")
-res_gw = compute_het_f(GENOMEWIDE_VCF)  # F/Ho sur l'échantillon de fond, pour les 7 zones + toutes les races
+res_gw = compute_het_f(GENOMEWIDE_VCF)
 rows = rows_from_results(res_gw)
-zone_rows = [r for k, r in rows if k == "zone"]  # sépare les lignes "zone" des lignes "race"
+zone_rows = [r for k, r in rows if k == "zone"]
 race_rows = [r for k, r in rows if k == "race"]
 pd.DataFrame(zone_rows).to_csv(OUTDIR / "Het_F_genomewide_by_zone.tsv", sep="\t", index=False, float_format="%.4f")
-pd.DataFrame(race_rows).sort_values(["geo_group", "F"]).to_csv(  # trié par zone puis par F croissant
+pd.DataFrame(race_rows).sort_values(["geo_group", "F"]).to_csv(
     OUTDIR / "Het_F_genomewide_by_race.tsv", sep="\t", index=False, float_format="%.4f")
-print(pd.DataFrame(zone_rows).to_string(index=False))  # affiche le résumé par zone dans le terminal
+print(pd.DataFrame(zone_rows).to_string(index=False))
 print(f"→ {OUTDIR}/Het_F_genomewide_by_zone.tsv")
 print(f"→ {OUTDIR}/Het_F_genomewide_by_race.tsv")
 

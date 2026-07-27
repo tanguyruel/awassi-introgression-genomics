@@ -22,17 +22,16 @@ Usage : python3 34_rarefaction_haplotype_sharing_9regions_v1.py
 (nécessite les sorties de 26_heatmap_LD_arbre_9regions_v2.py)
 """
 
-# ── Imports : chemins, calcul numérique, tables ──
 from pathlib import Path
 import numpy as np
 import pandas as pd
 
 HEATMAP_DIR = Path("analyses/haplotype_heatmap/Awassi_haplo/results/figures_finales/regions_A_9regions_v2")  # dossier des sorties du heatmap_haplotypes_arbre_ld.py (row_order.tsv)
-OUTDIR = Path("analyses/synthese_resultats/rarefaction_haplotype_sharing_9regions")  # dossier de sortie de la table de raréfaction
-OUTDIR.mkdir(parents=True, exist_ok=True)  # crée le dossier de sortie s'il n'existe pas
+OUTDIR = Path("analyses/synthese_resultats/rarefaction_haplotype_sharing_9regions")
+OUTDIR.mkdir(parents=True, exist_ok=True)
 
 MISMATCH_THRESHOLD = 0.01  # seuil de fraction de mésappariement pour un match "quasi identique" (<1%)
-N_ITER = 500  # nombre de tirages aléatoires (répétitions) de la raréfaction
+N_ITER = 500
 RNG_SEED = 12345  # graine du générateur aléatoire, pour reproductibilité
 
 REGIONS = [  # (préfixe de fichiers de la région, groupe P3 associé) pour les 9 régions
@@ -60,18 +59,17 @@ def min_mismatch_fracs(A, B):
     # True si les allèles diffèrent ET sont tous deux valides (mésappariement comptabilisable)
     mismatch = (A[:, None, :] != B[None, :, :]) & valid
     n_valid = valid.sum(axis=2)  # nb de SNP comparables pour chaque paire (haplotype A, haplotype B)
-    n_mismatch = mismatch.sum(axis=2)  # nb de SNP différents pour chaque paire
+    n_mismatch = mismatch.sum(axis=2)
     with np.errstate(invalid="ignore", divide="ignore"):
         # fraction de mésappariement par paire = n_mismatch / n_valid ; NaN si aucun SNP comparable
         frac = np.where(n_valid > 0, n_mismatch / np.maximum(n_valid, 1), np.nan)
-    # pour chaque haplotype de A, garde le minimum sur tous les B = le meilleur match (le plus proche)
     return np.nanmin(frac, axis=1)
 
 
 def load_matrices(prefix, p3):
-    df = pd.read_csv(HEATMAP_DIR / f"{prefix}_row_order.tsv", sep="\t")  # table d'haplotypes générée par le heatmap_haplotypes_arbre_ld.py
-    awassi = df[df["group"] == "Awassi"]  # sous-table des haplotypes Awassi
-    p3_df = df[df["group"] == p3]  # sous-table des haplotypes du groupe P3 de comparaison
+    df = pd.read_csv(HEATMAP_DIR / f"{prefix}_row_order.tsv", sep="\t")
+    awassi = df[df["group"] == "Awassi"]
+    p3_df = df[df["group"] == p3]
     A = np.stack([string_to_array(s) for s in awassi["allele_string"]])  # matrice haplotypes Awassi x SNP
     B = np.stack([string_to_array(s) for s in p3_df["allele_string"]])  # matrice haplotypes P3 x SNP
     return A, B
@@ -82,37 +80,37 @@ if __name__ == "__main__":
     sizes = {}
     for prefix, p3 in REGIONS:
         _, B = load_matrices(prefix, p3)  # seul B nous intéresse ici, pour connaître sa taille
-        sizes[prefix] = B.shape[0]  # nombre d'haplotypes P3 disponibles pour cette région
+        sizes[prefix] = B.shape[0]
     common_n = min(sizes.values())  # plus petit effectif P3 parmi toutes les régions -> taille de raréfaction
     print(f"Tailles P3 (haplotypes) par région : {sizes}")
     print(f"-> taille commune de raréfaction : {common_n} haplotypes\n")
 
-    rng = np.random.default_rng(RNG_SEED)  # générateur aléatoire reproductible (graine fixe)
-    rows = []  # résultats agrégés par région
+    rng = np.random.default_rng(RNG_SEED)
+    rows = []
 
     for prefix, p3 in REGIONS:
-        A, B = load_matrices(prefix, p3)  # haplotypes Awassi (A) et P3 (B) de la région
+        A, B = load_matrices(prefix, p3)
         n_awassi, n_p3 = A.shape[0], B.shape[0]
 
-        pct_exact_list, pct_lt1_list, mean_min_frac_list = [], [], []  # accumulateurs sur les N_ITER tirages
+        pct_exact_list, pct_lt1_list, mean_min_frac_list = [], [], []
         for _ in range(N_ITER):
             # tire common_n haplotypes P3 sans remise (ou tous les B si déjà <= common_n)
             idx = rng.choice(n_p3, size=common_n, replace=False) if n_p3 > common_n else np.arange(n_p3)
-            Bsub = B[idx]  # sous-échantillon P3 raréfié à common_n haplotypes
-            min_frac = min_mismatch_fracs(A, Bsub)  # mésappariement du meilleur match, pour chaque haplotype Awassi
-            pct_exact_list.append(100 * np.mean(min_frac == 0))  # % d'haplotypes Awassi avec un match exact (0 mésappariement)
-            pct_lt1_list.append(100 * np.mean(min_frac < MISMATCH_THRESHOLD))  # % avec un match à moins de 1% de mésappariement
-            mean_min_frac_list.append(np.nanmean(min_frac))  # mésappariement moyen du meilleur match sur ce tirage
+            Bsub = B[idx]
+            min_frac = min_mismatch_fracs(A, Bsub)
+            pct_exact_list.append(100 * np.mean(min_frac == 0))
+            pct_lt1_list.append(100 * np.mean(min_frac < MISMATCH_THRESHOLD))
+            mean_min_frac_list.append(np.nanmean(min_frac))
 
         row = {
             "region": prefix, "P3": p3, "n_awassi_haplotypes": n_awassi,
             "n_P3_haplotypes_total": n_p3, "n_P3_haplotypes_rarefied": common_n,
             "n_iter": N_ITER,
-            "pct_exact_mean": round(float(np.mean(pct_exact_list)), 1),  # % match exact, moyenné sur les N_ITER tirages
-            "pct_exact_sd": round(float(np.std(pct_exact_list)), 1),  # écart-type de ce % sur les tirages
-            "pct_lt1pct_mean": round(float(np.mean(pct_lt1_list)), 1),  # % match <1% mésappariement, moyenné
-            "pct_lt1pct_sd": round(float(np.std(pct_lt1_list)), 1),  # écart-type de ce %
-            "mean_min_mismatch_frac": round(float(np.mean(mean_min_frac_list)), 4),  # mésappariement moyen global
+            "pct_exact_mean": round(float(np.mean(pct_exact_list)), 1),
+            "pct_exact_sd": round(float(np.std(pct_exact_list)), 1),
+            "pct_lt1pct_mean": round(float(np.mean(pct_lt1_list)), 1),
+            "pct_lt1pct_sd": round(float(np.std(pct_lt1_list)), 1),
+            "mean_min_mismatch_frac": round(float(np.mean(mean_min_frac_list)), 4),
         }
         rows.append(row)
         print(f"{prefix:35s} P3={p3:10s} (n_P3_total={n_p3:4d} -> raréfié à {common_n}) : "
@@ -121,5 +119,5 @@ if __name__ == "__main__":
 
     out = pd.DataFrame(rows)
     out_tsv = OUTDIR / "Rarefaction_haplotype_sharing_9regions.tsv"
-    out.to_csv(out_tsv, sep="\t", index=False)  # sauvegarde la table finale (une ligne par région)
+    out.to_csv(out_tsv, sep="\t", index=False)
     print(f"\nTable écrite : {out_tsv}")

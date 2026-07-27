@@ -20,8 +20,6 @@ et les anciennes tentatives dans scripts/04_heatmap_ggtree/ et 04_heatmap_haplot
 Usage : python3 26_heatmap_LD_arbre_9regions_v2.py
 """
 
-# ── Imports : stdlib (fichiers, regex, appels externes), calcul (numpy/pandas),
-# tracé (matplotlib), clustering hiérarchique (scipy) ──
 import os
 import re
 import shlex
@@ -42,20 +40,20 @@ from matplotlib.gridspec import GridSpec
 from matplotlib.transforms import blended_transform_factory
 
 POP_DIR = Path("analyses/fst/popmaps_separees_v1")  # dossier des popmaps (listes d'individus par groupe)
-OUTDIR  = Path("analyses/haplotype_heatmap/Awassi_haplo/results/figures_finales/regions_A_9regions_v2")  # dossier de sortie figures/tables
-OUTDIR.mkdir(parents=True, exist_ok=True)  # crée le dossier de sortie s'il n'existe pas
+OUTDIR  = Path("analyses/haplotype_heatmap/Awassi_haplo/results/figures_finales/regions_A_9regions_v2")
+OUTDIR.mkdir(parents=True, exist_ok=True)
 
-MAX_MISSING = 0.05  # taux max de génotypes manquants toléré par SNP
-MIN_MAF     = 0.05  # fréquence allélique mineure minimale pour garder un SNP
-LABEL_FONTSIZE = 2.6  # taille de police des étiquettes d'haplotypes
-TREE_WIDTH     = 5.2  # largeur relative du panneau arbre dans la figure
+MAX_MISSING = 0.05
+MIN_MAF     = 0.05
+LABEL_FONTSIZE = 2.6
+TREE_WIDTH     = 5.2
 
 GENE_COLOR = "#2ca02c"  # couleur verte des annotations de gène
 
 # ── Régions (7 régions A v10b + 2 nouvelles) — VCF phasés déjà calculés ─────
 # "genes" : gène(s) d'intérêt de la région, coords exactes GFF Oar_v4.0
 # (vérifiées par requête directe dans le GFF, cf. AWASSI_AGENT_LOG.md 07/07).
-REGIONS = [  # une entrée (dict) par région candidate à tracer
+REGIONS = [
     {"chr": 3,  "start": 129220001, "end": 129260000, "P3": "Europe",  # région 1 : chr3, P3=Europe
      "label": "chr3 129.220–129.260 Mb",
      "vcf": "analyses/phasing_beagle/Phasing_Beagle_v2_5regions_v10b/phased/chr3_129.22_129.26Mb.beagle_phased.vcf.gz",
@@ -98,7 +96,7 @@ REGIONS = [  # une entrée (dict) par région candidate à tracer
 ]
 
 # ── Couleurs : mêmes que les scripts 13b_plot_fst_fd_ld_aligned_v*.py ───────
-BASE_COLORS = {  # couleur associée à chaque groupe pour les graphiques
+BASE_COLORS = {
     "Awassi":               "#E41A1C",
     "MiddleEastNonAwassi":  "#1f77b4",
     "Africa":               "#e07b39",
@@ -108,7 +106,7 @@ BASE_COLORS = {  # couleur associée à chaque groupe pour les graphiques
     "Europe":               "#8c564b",
 }
 
-DISPLAY_LABELS = {  # libellé affiché pour chaque groupe (légende de la figure)
+DISPLAY_LABELS = {
     "Awassi": "Awassi",
     "MiddleEastNonAwassi": "ME (Moyen-Orient)",
     "Africa": "Africa",
@@ -120,66 +118,51 @@ DISPLAY_LABELS = {  # libellé affiché pour chaque groupe (légende de la figur
 
 
 def display_label(g):
-    # renvoie le libellé d'affichage du groupe, ou nom brut (sans "_") si absent du dict
     return DISPLAY_LABELS.get(g, g.replace("_", " "))
 
 
 def group_color(g):
-    # renvoie la couleur du groupe, gris par défaut si groupe inconnu
     return BASE_COLORS.get(g, "#999999")
 
 
 def run_cmd(cmd):
-    # exécute une commande externe (liste ou chaîne shell) et renvoie sa sortie texte
     return subprocess.check_output(cmd, text=True)
 
 
 def read_list(path):
-    # lit un fichier texte, renvoie la liste des lignes non vides (espaces retirés)
     with open(path) as f:
         return [x.strip() for x in f if x.strip()]
 
 
 def safe_name(x):
-    # remplace tout caractère non alphanumérique (hors ._-) par "_"
     x = re.sub(r"[^A-Za-z0-9._-]+", "_", x)
-    # regroupe les underscores consécutifs en un seul
     x = re.sub(r"_+", "_", x)
-    # retire les underscores en début/fin de chaîne
     return x.strip("_")
 
 
 def parse_gt(gt_field):
-    # extrait le champ GT (avant les ":") du champ VCF complet
     gt = gt_field.split(":")[0]
     if gt in ["./.", ".|."]:
-        # génotype manquant pour les deux allèles
         return np.nan, np.nan
-    # séparateur "|" si phasé, sinon "/" (non phasé)
     sep = "|" if "|" in gt else "/"
-    # sépare les deux allèles du génotype
     parts = gt.split(sep)
     if len(parts) != 2:
-        # format inattendu (pas exactement 2 allèles) -> considéré manquant
         return np.nan, np.nan
 
     def conv(x):
-        # convertit un allèle "." en NaN, sinon en float (0 ou 1)
         if x == ".":
             return np.nan
         return float(int(x))
 
-    # renvoie (allèle de l'haplotype 1, allèle de l'haplotype 2)
     return conv(parts[0]), conv(parts[1])
 
 
 def load_haplotypes(vcf, pop_files_dir, groups):
-    # liste des échantillons présents dans le VCF (bcftools query -l)
     vcf_samples = run_cmd(["bcftools", "query", "-l", vcf]).splitlines()
 
-    sample_to_group = {}  # associe chaque échantillon à son groupe d'origine
+    sample_to_group = {}
     for g in groups:
-        p = os.path.join(pop_files_dir, f"{g}.txt")  # fichier popmap du groupe g
+        p = os.path.join(pop_files_dir, f"{g}.txt")
         if not os.path.exists(p):
             print(f"Attention : pop file absent, ignoré : {p}")
             continue
@@ -188,31 +171,26 @@ def load_haplotypes(vcf, pop_files_dir, groups):
                 # le premier groupe rencontré est prioritaire (pas d'écrasement)
                 sample_to_group[s] = g
 
-    # échantillons du VCF qui appartiennent à un des groupes demandés
     selected_samples = [s for s in vcf_samples if s in sample_to_group]
     if len(selected_samples) == 0:
         raise RuntimeError("Aucun individu sélectionné dans le VCF.")
 
-    # écrit la liste des échantillons sélectionnés dans un fichier temporaire
-    # (nécessaire pour l'option -S de bcftools view)
     with tempfile.NamedTemporaryFile("w", delete=False) as tmp:
         for s in selected_samples:
             tmp.write(s + "\n")
         sample_file = tmp.name
 
     try:
-        q_vcf = shlex.quote(vcf)  # échappement shell du chemin du VCF
-        q_sample = shlex.quote(sample_file)  # échappement shell du fichier d'échantillons
+        q_vcf = shlex.quote(vcf)
+        q_sample = shlex.quote(sample_file)
         cmd = [
             "bash", "-lc",
-            # filtre : échantillons sélectionnés, SNPs bialléliques uniquement,
-            # puis extrait CHROM/POS/GT de chaque individu
             f"bcftools view -S {q_sample} -m2 -M2 -v snps -Ou {q_vcf} | "
             "bcftools query -f '%CHROM\\t%POS[\\t%GT]\\n'"
         ]
-        txt = run_cmd(cmd)  # sortie texte : une ligne par SNP
+        txt = run_cmd(cmd)
     finally:
-        os.remove(sample_file)  # nettoyage du fichier temporaire
+        os.remove(sample_file)
 
     hap_names, hap_individuals, hap_index, hap_groups = [], [], [], []
     for s in selected_samples:
@@ -227,10 +205,9 @@ def load_haplotypes(vcf, pop_files_dir, groups):
         parts = line.rstrip("\n").split("\t")
         if len(parts) < 3:
             continue
-        positions.append(int(parts[1]))  # position du SNP (colonne POS)
+        positions.append(int(parts[1]))
         one_snp = []
         for gt in parts[2:]:
-            # parcourt les GT de chaque individu et les éclate en 2 haplotypes
             a1, a2 = parse_gt(gt)
             one_snp.append(a1)
             one_snp.append(a2)
@@ -239,46 +216,45 @@ def load_haplotypes(vcf, pop_files_dir, groups):
     H = np.array(rows_by_snp, dtype=float).T  # transposée : lignes=haplotypes, colonnes=SNP
     positions = np.array(positions)
 
-    # renvoie la matrice haplotypes x SNP + toutes les métadonnées associées
     return (H, positions, np.array(hap_names), np.array(hap_individuals),
             np.array(hap_index), np.array(hap_groups), selected_samples, sample_to_group)
 
 
 def restrict_positions(H, positions, pos_min, pos_max):
-    keep = np.ones(len(positions), dtype=bool)  # masque booléen, tout gardé au départ
+    keep = np.ones(len(positions), dtype=bool)
     if pos_min is not None:
-        keep &= positions >= pos_min  # exclut les SNP avant la borne basse
+        keep &= positions >= pos_min
     if pos_max is not None:
-        keep &= positions <= pos_max  # exclut les SNP après la borne haute
-    return H[:, keep], positions[keep]  # sous-matrice et positions restreintes à la fenêtre
+        keep &= positions <= pos_max
+    return H[:, keep], positions[keep]
 
 
 def filter_snps(H, positions, max_missing, min_maf):
-    keep = []  # indices des SNP conservés
+    keep = []
     for j in range(H.shape[1]):
-        col = H[:, j]  # colonne = génotypes de tous les haplotypes pour ce SNP
-        miss = np.mean(np.isnan(col))  # proportion de valeurs manquantes
+        col = H[:, j]
+        miss = np.mean(np.isnan(col))
         if miss > max_missing:
-            continue  # trop de données manquantes -> SNP rejeté
-        vals = col[~np.isnan(col)]  # valeurs non manquantes
+            continue
+        vals = col[~np.isnan(col)]
         if len(vals) == 0:
             continue
         if len(np.unique(vals)) < 2:
-            continue  # SNP non variable (monomorphe) -> rejeté
-        n0 = np.sum(vals == 0)  # nb d'allèles REF
-        n1 = np.sum(vals == 1)  # nb d'allèles ALT
+            continue
+        n0 = np.sum(vals == 0)
+        n1 = np.sum(vals == 1)
         total = n0 + n1
         if total == 0:
             continue
         maf = min(n0, n1) / total  # fréquence de l'allèle mineur
         if maf < min_maf:
-            continue  # MAF trop faible -> SNP rejeté
+            continue
         keep.append(j)
 
     keep = np.array(keep, dtype=int)
     if len(keep) < 2:
         raise RuntimeError("Moins de 2 SNPs après filtre.")
-    return H[:, keep], positions[keep]  # matrice et positions filtrées
+    return H[:, keep], positions[keep]
 
 
 def allele_string(row):
@@ -293,7 +269,7 @@ def assign_exact_ids(H):
     exact_ids = []
     for s in strings:
         if s not in str_to_id:
-            str_to_id[s] = f"H{len(str_to_id) + 1:03d}"  # nouvel identifiant séquentiel
+            str_to_id[s] = f"H{len(str_to_id) + 1:03d}"
         exact_ids.append(str_to_id[s])
     return np.array(exact_ids), np.array(strings)
 
@@ -303,8 +279,8 @@ def make_tree_order(H):
     X[np.isnan(X)] = 2  # code les valeurs manquantes en 2 (catégorie à part pour la distance)
     D = pdist(X, metric="hamming")  # distance de Hamming entre chaque paire d'haplotypes
     Z = linkage(D, method="average")  # clustering hiérarchique (average linkage / UPGMA)
-    d = dendrogram(Z, no_plot=True)  # calcule l'ordre des feuilles sans tracer de figure
-    return Z, np.array(d["leaves"], dtype=int)  # matrice de linkage + ordre des feuilles
+    d = dendrogram(Z, no_plot=True)
+    return Z, np.array(d["leaves"], dtype=int)
 
 
 def matrix_for_plot(H):
@@ -317,32 +293,32 @@ def compute_r2(H, positions):
     # H : matrice haplotypes (lignes) x SNP (colonnes), valeurs 0/1/NaN
     X = H.copy()
     means = np.nanmean(X, axis=0)  # fréquence allélique moyenne de chaque SNP (NaN ignorés)
-    inds = np.where(np.isnan(X))  # coordonnées des valeurs manquantes
+    inds = np.where(np.isnan(X))
     X[inds] = np.take(means, inds[1])  # impute le manquant par la moyenne du SNP correspondant
-    X = X - X.mean(axis=0)  # centre chaque colonne (SNP) sur sa moyenne
-    sd = X.std(axis=0, ddof=1)  # écart-type de chaque SNP (variance d'échantillon, ddof=1)
+    X = X - X.mean(axis=0)
+    sd = X.std(axis=0, ddof=1)
     valid = sd > 0  # exclut les SNP sans variance (devenus constants après imputation)
     X = X[:, valid]
     positions = positions[valid]
     sd = X.std(axis=0, ddof=1)  # recalcule l'écart-type sur les SNP restants uniquement
-    X = X / sd  # réduit chaque colonne (SNP centré-réduit, moyenne 0 écart-type 1)
-    n = X.shape[0]  # nombre d'haplotypes (observations)
+    X = X / sd
+    n = X.shape[0]
     corr = (X.T @ X) / (n - 1)  # matrice de corrélation de Pearson entre SNP (produit croisé normalisé)
     corr = np.clip(corr, -1, 1)  # sécurité numérique : corrélation strictement bornée à [-1, 1]
     r2 = corr ** 2  # r² = carré du coefficient de corrélation de Pearson = mesure du LD
     np.fill_diagonal(r2, 1.0)  # r² d'un SNP avec lui-même fixé à 1 par convention
-    return r2, positions  # matrice r² (SNP x SNP) et positions correspondantes (après filtrage variance)
+    return r2, positions
 
 
 def gene_index_span(positions, gene_start, gene_end):
     """Convertit les bornes bp d'un gène en indices SNP (espace de la heatmap),
     en clippant aux bornes de la fenêtre affichée. None si hors fenêtre."""
-    lo = max(gene_start, int(positions[0]))  # borne basse, clippée au premier SNP affiché
-    hi = min(gene_end, int(positions[-1]))  # borne haute, clippée au dernier SNP affiché
+    lo = max(gene_start, int(positions[0]))
+    hi = min(gene_end, int(positions[-1]))
     if lo > hi:
-        return None  # le gène est entièrement hors de la fenêtre affichée
-    i0 = int(np.searchsorted(positions, lo, side="left"))  # indice SNP correspondant au début du gène
-    i1 = int(np.searchsorted(positions, hi, side="right"))  # indice SNP correspondant à la fin du gène
+        return None
+    i0 = int(np.searchsorted(positions, lo, side="left"))
+    i1 = int(np.searchsorted(positions, hi, side="right"))
     if i1 <= i0:
         i1 = i0 + 1  # garantit une largeur minimale d'1 SNP pour que ce soit visible
     return i0, i1
@@ -360,9 +336,9 @@ def annotate_genes(ax_mat, ax_ld, n_rows, n_snps, genes, positions):
     trans_ld = blended_transform_factory(ax_ld.transData, ax_ld.transAxes)
 
     for gene in genes:
-        span = gene_index_span(positions, gene["start"], gene["end"])  # indices SNP occupés par le gène
+        span = gene_index_span(positions, gene["start"], gene["end"])
         if span is None:
-            continue  # gène hors fenêtre, rien à tracer
+            continue
         i0, i1 = span
 
         # Ligne verte fine pile sur le bord supérieur de la heatmap
@@ -380,7 +356,7 @@ def annotate_genes(ax_mat, ax_ld, n_rows, n_snps, genes, positions):
 
 
 def draw_ld_down_triangle(ax, r2, positions):
-    n = len(positions)  # nombre de SNP affichés
+    n = len(positions)
     # palette blanc -> rouge foncé pour représenter r² croissant (0 à 1)
     cmap = LinearSegmentedColormap.from_list(
         "ld_red", ["#FFFFFF", "#FFF5EB", "#FDD0A2", "#FC8D59", "#D7301F", "#7F0000"]
@@ -395,7 +371,7 @@ def draw_ld_down_triangle(ax, r2, positions):
             dx = 0.5 * scale_x
             y = (i - j) / 2.0  # hauteur du losange = distance (en indices) entre les 2 SNP
             verts.append([(x - dx, y), (x, y + 0.5), (x + dx, y), (x, y - 0.5)])
-            values.append(r2[i, j])  # valeur r² de la paire de SNP (i,j)
+            values.append(r2[i, j])
 
     values = np.array(values)
     # collection de polygones colorés selon r² (triangle LD "pointe vers le bas")
@@ -408,8 +384,8 @@ def draw_ld_down_triangle(ax, r2, positions):
     # contour du triangle (bord supérieur + les deux côtés obliques)
     ax.plot([0, n, n / 2.0, 0], [0, 0, n / 2.0, 0], color="black", linewidth=0.35, zorder=5)
 
-    tick_idx = np.linspace(0, n - 1, min(9, n)).astype(int)  # au plus 9 graduations, réparties régulièrement
-    tick_lab = [f"{positions[i] / 1e6:.3f}" for i in tick_idx]  # labels en Mb
+    tick_idx = np.linspace(0, n - 1, min(9, n)).astype(int)
+    tick_lab = [f"{positions[i] / 1e6:.3f}" for i in tick_idx]
     ax.set_xticks(tick_idx + 0.5)
     ax.set_xticklabels(tick_lab, rotation=45, ha="right", fontsize=9)
     ax.set_xlabel("Position génomique (Mb)", fontsize=12)
@@ -421,7 +397,7 @@ def draw_ld_down_triangle(ax, r2, positions):
 
 
 def write_exact_sharing_table(H, haplotypes, individuals, hap_index, groups, out_tsv):
-    exact_ids, allele_strings = assign_exact_ids(H)  # identifiant d'haplotype exact + séquence d'allèles
+    exact_ids, allele_strings = assign_exact_ids(H)
     df = pd.DataFrame({
         "exact_haplotype_id": exact_ids, "haplotype": haplotypes,
         "individual": individuals, "hap_index": hap_index,
@@ -430,33 +406,33 @@ def write_exact_sharing_table(H, haplotypes, individuals, hap_index, groups, out
     rows = []
     for hid, sub in df.groupby("exact_haplotype_id", sort=False):
         # sub = tous les haplotypes partageant exactement le même identifiant (même séquence d'allèles)
-        group_counts = sub["group"].value_counts().to_dict()  # nb d'occurrences par groupe
+        group_counts = sub["group"].value_counts().to_dict()
         rows.append({
             "exact_haplotype_id": hid, "n_haplotypes": len(sub),
             "n_individuals": sub["individual"].nunique(), "n_groups": sub["group"].nunique(),
             "groups": ",".join(sorted(sub["group"].unique())),
             "individuals": ",".join(sorted(sub["individual"].unique())),
             "haplotypes": ",".join(sub["haplotype"].tolist()),
-            **{f"n_{g}": n for g, n in group_counts.items()}  # une colonne de comptage par groupe
+            **{f"n_{g}": n for g, n in group_counts.items()}
         })
     out = pd.DataFrame(rows).fillna(0)  # NaN -> 0 pour les groupes absents d'une ligne
-    out = out.sort_values(["n_groups", "n_haplotypes"], ascending=[False, False])  # les plus partagés en premier
+    out = out.sort_values(["n_groups", "n_haplotypes"], ascending=[False, False])
     out.to_csv(out_tsv, sep="\t", index=False)
 
 
 def plot_combined(region_name, H, positions, haplotypes, individuals, hap_index, groups,
                    group_order, genes, out_png, out_pdf, out_rows, out_sharing, out_snps,
                    out_ld_matrix, out_ld_summary):
-    Z, order = make_tree_order(H)  # clustering hiérarchique + ordre des lignes selon l'arbre
-    H_ord = H[order, :]  # matrice réordonnée selon l'arbre
-    M_ord = matrix_for_plot(H_ord)  # version affichable (manquant codé en 2)
+    Z, order = make_tree_order(H)
+    H_ord = H[order, :]
+    M_ord = matrix_for_plot(H_ord)
     haplotypes_ord = haplotypes[order]
     individuals_ord = individuals[order]
     hap_index_ord = hap_index[order]
     groups_ord = groups[order]
 
-    exact_ids, allele_strings = assign_exact_ids(H)  # identifiants d'haplotypes exacts (ordre original)
-    exact_ids_ord = exact_ids[order]  # réordonnés selon l'arbre
+    exact_ids, allele_strings = assign_exact_ids(H)
+    exact_ids_ord = exact_ids[order]
     allele_strings_ord = allele_strings[order]
 
     r2, ld_positions = compute_r2(H, positions)  # LD recalculé sur les haplotypes affichés
@@ -472,10 +448,10 @@ def plot_combined(region_name, H, positions, haplotypes, individuals, hap_index,
         positions = positions[idx_keep]
         n_rows, n_snps = M_ord.shape
 
-    fig_w = 34  # largeur de figure fixe (pouces)
+    fig_w = 34
     heat_h = max(9.0, min(31.0, n_rows * 0.070))  # hauteur heatmap proportionnelle au nb d'haplotypes, bornée
     ld_h = max(4.2, min(8.5, n_snps * 0.030))  # hauteur triangle LD proportionnelle au nb de SNP, bornée
-    fig_h = heat_h + ld_h + 3.0  # hauteur totale de la figure
+    fig_h = heat_h + ld_h + 3.0
 
     fig = plt.figure(figsize=(fig_w, fig_h))
     # grille 3 lignes x 5 colonnes : heatmap/LD/colorbar en lignes, arbre/groupe/matrice/labels/légende en colonnes
@@ -491,21 +467,20 @@ def plot_combined(region_name, H, positions, haplotypes, individuals, hap_index,
     ax_ld = fig.add_subplot(gs[1, 2], sharex=ax_mat)  # triangle LD (même axe X que la heatmap)
     ax_cbar = fig.add_subplot(gs[2, 2])  # colorbar du LD
 
-    # dessine le dendrogramme, feuilles orientées vers la gauche, sans labels de feuilles
     dendrogram(Z, orientation="left", no_labels=True, color_threshold=0,
               above_threshold_color="black", ax=ax_tree)
     ax_tree.set_title("Arbre", fontsize=20, fontweight="bold")
-    ax_tree.set_xticks([]); ax_tree.set_yticks([])  # pas de graduations
+    ax_tree.set_xticks([]); ax_tree.set_yticks([])
     ax_tree.set_xlabel("Distance 0/1", fontsize=10)
 
-    present_groups = [g for g in group_order if g in groups_ord]  # groupes présents, dans l'ordre attendu
+    present_groups = [g for g in group_order if g in groups_ord]
     for g in groups_ord:
         if g not in present_groups:
             present_groups.append(g)  # ajoute les groupes imprévus en fin de liste
 
-    g_to_i = {g: i for i, g in enumerate(present_groups)}  # index numérique par groupe
-    g_vals = np.array([g_to_i[g] for g in groups_ord]).reshape(-1, 1)  # colonne d'index pour chaque haplotype
-    g_cols = [group_color(g) for g in present_groups]  # couleurs correspondant à chaque groupe
+    g_to_i = {g: i for i, g in enumerate(present_groups)}
+    g_vals = np.array([g_to_i[g] for g in groups_ord]).reshape(-1, 1)
+    g_cols = [group_color(g) for g in present_groups]
 
     # bande verticale colorée = groupe d'origine de chaque haplotype (même ordre que la heatmap)
     ax_group.imshow(g_vals, aspect="auto", interpolation="nearest",
@@ -530,15 +505,15 @@ def plot_combined(region_name, H, positions, haplotypes, individuals, hap_index,
         y = i * 10 + 5  # centre vertical de la ligne i
         lab = f"{exact_ids_ord[i]}  {individuals_ord[i]}_{hap_index_ord[i]}"  # ex: "H001  Ind1_h1"
         ax_lab.text(0, y, lab, va="center", ha="left", fontsize=LABEL_FONTSIZE,
-                   color=group_color(groups_ord[i]))  # couleur du texte = groupe de l'haplotype
+                   color=group_color(groups_ord[i]))
 
     for ax in [ax_tree, ax_group, ax_mat, ax_lab]:
         ax.set_ylim(0, n_rows * 10)  # aligne verticalement les 4 panneaux
 
-    pc = draw_ld_down_triangle(ax_ld, r2, positions)  # trace le triangle LD
+    pc = draw_ld_down_triangle(ax_ld, r2, positions)
     ax_ld.set_xlim(0, n_snps)
 
-    annotate_genes(ax_mat, ax_ld, n_rows, n_snps, genes, positions)  # ajoute les repères de gène(s)
+    annotate_genes(ax_mat, ax_ld, n_rows, n_snps, genes, positions)
 
     cbar = fig.colorbar(pc, cax=ax_cbar, orientation="horizontal")
     cbar.set_label("LD pairwise recalculé uniquement sur les haplotypes affichés — r² entre SNPs", fontsize=14)
@@ -554,15 +529,14 @@ def plot_combined(region_name, H, positions, haplotypes, individuals, hap_index,
                                        edgecolor="black", linewidth=1.0,
                                        transform=ax_leg.transAxes, clip_on=False))
         ax_leg.text(0.23, y, label, fontsize=14.0, va="center", transform=ax_leg.transAxes)
-        y -= 0.075  # descend pour l'entrée suivante
+        y -= 0.075
 
     y -= 0.035
     ax_leg.text(0, y, "Groupes", fontweight="bold", fontsize=19, transform=ax_leg.transAxes)
     y -= 0.075
     for g in present_groups:
-        n_hap = int(np.sum(groups_ord == g))  # nb d'haplotypes de ce groupe affichés
-        n_ind = len(set(individuals_ord[groups_ord == g]))  # nb d'individus distincts de ce groupe
-        # carré de couleur + texte récapitulatif pour chaque groupe
+        n_hap = int(np.sum(groups_ord == g))
+        n_ind = len(set(individuals_ord[groups_ord == g]))
         ax_leg.add_patch(plt.Rectangle((0.02, y - 0.022), 0.15, 0.050, facecolor=group_color(g),
                                        edgecolor="black", linewidth=1.0,
                                        transform=ax_leg.transAxes, clip_on=False))
@@ -575,7 +549,6 @@ def plot_combined(region_name, H, positions, haplotypes, individuals, hap_index,
         ax_leg.text(0, y, "Gène(s) d'intérêt", fontweight="bold", fontsize=19, transform=ax_leg.transAxes)
         y -= 0.075
         for gene in genes:
-            # carré de couleur + texte pour chaque gène annoté
             ax_leg.add_patch(plt.Rectangle((0.02, y - 0.022), 0.15, 0.050, facecolor=GENE_COLOR,
                                            edgecolor="black", linewidth=1.0, alpha=0.5,
                                            transform=ax_leg.transAxes, clip_on=False))
@@ -583,10 +556,10 @@ def plot_combined(region_name, H, positions, haplotypes, individuals, hap_index,
                        fontsize=13.0, va="center", transform=ax_leg.transAxes)
             y -= 0.064
 
-    fig.subplots_adjust(left=0.018, right=0.992, top=0.940, bottom=0.055)  # ajuste les marges globales
-    plt.savefig(out_png, dpi=300, bbox_inches="tight", pad_inches=0.02)  # export PNG haute résolution
-    plt.savefig(out_pdf, bbox_inches="tight", pad_inches=0.02)  # export PDF vectoriel
-    plt.close()  # libère la mémoire de la figure
+    fig.subplots_adjust(left=0.018, right=0.992, top=0.940, bottom=0.055)
+    plt.savefig(out_png, dpi=300, bbox_inches="tight", pad_inches=0.02)
+    plt.savefig(out_pdf, bbox_inches="tight", pad_inches=0.02)
+    plt.close()
 
     rows = pd.DataFrame({
         "plot_row_bottom_to_top_1based": np.arange(1, n_rows + 1),
@@ -594,43 +567,43 @@ def plot_combined(region_name, H, positions, haplotypes, individuals, hap_index,
         "individual": individuals_ord, "hap_index": hap_index_ord,
         "group": groups_ord, "allele_string": allele_strings_ord,
     })
-    rows.to_csv(out_rows, sep="\t", index=False)  # table de correspondance ligne <-> haplotype
-    write_exact_sharing_table(H, haplotypes, individuals, hap_index, groups, out_sharing)  # table de partage d'haplotypes exacts
+    rows.to_csv(out_rows, sep="\t", index=False)
+    write_exact_sharing_table(H, haplotypes, individuals, hap_index, groups, out_sharing)
     pd.DataFrame({"snp_index_1based": np.arange(1, len(positions) + 1),
-                  "position": positions, "position_Mb": positions / 1e6}).to_csv(out_snps, sep="\t", index=False)  # liste des SNP utilisés
+                  "position": positions, "position_Mb": positions / 1e6}).to_csv(out_snps, sep="\t", index=False)
     pd.DataFrame(r2, index=[str(x) for x in positions],
-                columns=[str(x) for x in positions]).to_csv(out_ld_matrix, sep="\t")  # matrice r² complète
+                columns=[str(x) for x in positions]).to_csv(out_ld_matrix, sep="\t")
 
     tri = np.tril_indices(len(positions), k=-1)  # indices du triangle inférieur (paires uniques, hors diagonale)
-    vals = r2[tri]  # valeurs r² de toutes les paires de SNP
-    off = vals[np.isfinite(vals)]  # exclut d'éventuelles valeurs non finies
+    vals = r2[tri]
+    off = vals[np.isfinite(vals)]
     pd.DataFrame({
         "region": [region_name], "n_haplotypes_total": [H.shape[0]], "n_snps_used": [len(positions)],
         "mean_r2_offdiag": [float(np.nanmean(off))], "median_r2_offdiag": [float(np.nanmedian(off))],
         "prop_pairs_r2_ge_0.5": [float(np.mean(off >= 0.5))], "prop_pairs_r2_ge_0.8": [float(np.mean(off >= 0.8))],
         "note": ["LD recalculé sur les haplotypes affichés (Awassi+ME+P3_best) ; triangle inversé, même axe X que la matrice"]
-    }).to_csv(out_ld_summary, sep="\t", index=False)  # résumé statistique du LD de la région
+    }).to_csv(out_ld_summary, sep="\t", index=False)
 
 
 def run_region(reg):
-    chrom, start, end, p3, label, vcf = reg["chr"], reg["start"], reg["end"], reg["P3"], reg["label"], reg["vcf"]  # déballe les paramètres de la région
-    genes = reg.get("genes", [])  # liste des gènes à annoter (vide si absent)
+    chrom, start, end, p3, label, vcf = reg["chr"], reg["start"], reg["end"], reg["P3"], reg["label"], reg["vcf"]
+    genes = reg.get("genes", [])
     print(f"\n{'='*70}\n{label}  |  P3 = {p3}")
 
     if not Path(vcf).exists():
         print(f"  [!] VCF phasé introuvable : {vcf} — région ignorée")
-        return []  # rien à générer si le VCF n'existe pas
+        return []
 
-    group_order = ["Awassi", "MiddleEastNonAwassi", p3]  # ordre d'affichage des groupes
+    group_order = ["Awassi", "MiddleEastNonAwassi", p3]
 
     H, positions, haplotypes, individuals, hap_index, groups, selected, s2g = load_haplotypes(
         vcf, str(POP_DIR), group_order
-    )  # charge la matrice haplotypes x SNP depuis le VCF phasé
-    H, positions = restrict_positions(H, positions, start, end)  # restreint aux SNP de la fenêtre de la région
-    H, positions = filter_snps(H, positions, max_missing=MAX_MISSING, min_maf=MIN_MAF)  # filtre qualité des SNP
+    )
+    H, positions = restrict_positions(H, positions, start, end)
+    H, positions = filter_snps(H, positions, max_missing=MAX_MISSING, min_maf=MIN_MAF)
 
     start_mb, end_mb = start / 1e6, end / 1e6
-    prefix = f"chr{chrom}_{start_mb:.3f}_{end_mb:.3f}Mb_{p3}"  # préfixe commun des fichiers de sortie
+    prefix = f"chr{chrom}_{start_mb:.3f}_{end_mb:.3f}Mb_{p3}"
 
     out_png = OUTDIR / f"{prefix}.png"
     out_pdf = OUTDIR / f"{prefix}.pdf"
@@ -641,22 +614,22 @@ def run_region(reg):
     out_ld_summary = OUTDIR / f"{prefix}_LD_summary.tsv"
 
     plot_combined(label, H, positions, haplotypes, individuals, hap_index, groups, group_order, genes,
-                 out_png, out_pdf, out_rows, out_sharing, out_snps, out_ld_matrix, out_ld_summary)  # génère la figure et les tables
+                 out_png, out_pdf, out_rows, out_sharing, out_snps, out_ld_matrix, out_ld_summary)
 
     print(f"  {H.shape[0]} haplotypes ; {len(positions)} SNPs")
     print(f"  → {out_png.name}")
 
-    return [out_png, out_pdf, out_rows, out_sharing, out_snps, out_ld_matrix, out_ld_summary]  # fichiers générés pour cette région
+    return [out_png, out_pdf, out_rows, out_sharing, out_snps, out_ld_matrix, out_ld_summary]
 
 
 if __name__ == "__main__":
-    generated = []  # liste cumulée de tous les fichiers générés
+    generated = []
     for reg in REGIONS:
         try:
-            generated += run_region(reg)  # traite chaque région, une par une
+            generated += run_region(reg)
         except Exception as e:
             print(f"  [!] Erreur région {reg['label']} : {e}")  # continue même en cas d'échec d'une région
 
     print(f"\nTerminé — fichiers dans {OUTDIR}")
     for f in generated:
-        print(f"  {f}")  # liste finale des fichiers produits
+        print(f"  {f}")

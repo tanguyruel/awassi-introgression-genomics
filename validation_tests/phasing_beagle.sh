@@ -10,24 +10,23 @@
 set -euo pipefail
 cd /home/tanguyruel/Bureau/genome_complet_Awassi  # chemin en dur à adapter
 
-BEAGLE_JAR="tools/envs/beagle-awassi/share/beagle-5.5_27Feb25.75f-0/beagle.jar"  # chemin vers le .jar Beagle
+BEAGLE_JAR="tools/envs/beagle-awassi/share/beagle-5.5_27Feb25.75f-0/beagle.jar"
 VCF_DIR="analyses/fst/local_20kb_step5kb_sep_EU_AM_AUS_v1/filtered_vcf"  # VCF déjà filtrés PASS+biallélique
 OUTDIR="analyses/phasing_beagle/Phasing_Beagle_v1_5regions"
 LOGDIR="logs"
-mkdir -p "$OUTDIR/input" "$OUTDIR/phased"  # crée les sous-dossiers de sortie si absents
+mkdir -p "$OUTDIR/input" "$OUTDIR/phased"
 
-TIMESTAMP=$(date +%d_%m_%H%M)  # horodatage pour nommer les logs de façon unique
+TIMESTAMP=$(date +%d_%m_%H%M)
 
 phase_region() {
     local LABEL="$1"   # ex: chr14_35.41_35.57Mb
     local CHR="$2"
-    local START="$3"   # coordonnée start de la région A
-    local END="$4"     # coordonnée end de la région A
+    local START="$3"
+    local END="$4"
     local FLANK=1000000  # marge de 1 Mb ajoutée de chaque côté (contexte utile au phasage statistique)
 
     local WIN_START=$(( START - FLANK ))
     local WIN_END=$(( END + FLANK ))
-    # clamp à 1
     [[ $WIN_START -lt 1 ]] && WIN_START=1  # évite une coordonnée négative si la région est près du début du chromosome
 
     local SRC="${VCF_DIR}/chr${CHR}.PASS_biallelic_snps.vcf.gz"
@@ -40,9 +39,9 @@ phase_region() {
     bcftools view \
         -r "${CHR}:${WIN_START}-${WIN_END}" \
         "$SRC" \
-        -Oz -o "$UNPHASED"  # extrait uniquement la fenêtre élargie, compresse en sortie (Oz)
+        -Oz -o "$UNPHASED"
     bcftools index -t "$UNPHASED"  # index tabix, nécessaire pour les accès par région ensuite
-    echo "     SNPs extraits : $(bcftools view -H "$UNPHASED" | wc -l)"  # compte les lignes de variants (sans l'en-tête)
+    echo "     SNPs extraits : $(bcftools view -H "$UNPHASED" | wc -l)"
 
     echo "  2) Phasage BEAGLE..."
     java -Xmx4g -jar "$BEAGLE_JAR" \
@@ -57,7 +56,7 @@ phase_region() {
         # nthreads=8   : parallélisation Beagle
         # seed=12345   : graine fixe, pour un résultat reproductible d'un run à l'autre
 
-    bcftools index -t "${PHASED_PREFIX}.vcf.gz"  # index du VCF phasé produit par Beagle
+    bcftools index -t "${PHASED_PREFIX}.vcf.gz"
 
     echo "  3) Vérification..."
     echo "     SNPs phasés   : $(bcftools view -H "${PHASED_PREFIX}.vcf.gz" | wc -l)"

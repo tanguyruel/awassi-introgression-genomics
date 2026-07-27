@@ -21,7 +21,6 @@ Script de référence pour "D-stat 150kb + jackknife" (cf. Annexe A du rapport d
 Usage : python3 27_dstat_9regions_blockjackknife_v1.py
 """
 
-# Bibliothèque standard : écriture TSV, calcul (racine carrée), appel de bcftools, chemins, dict à valeur par défaut
 import csv
 import math
 import subprocess
@@ -30,25 +29,23 @@ from collections import defaultdict
 
 POP_DIR = Path("analyses/fst/popmaps_separees_v1")  # dossier des popmaps par groupe (1 fichier liste d'échantillons par groupe)
 POPMAP_MAIN = Path("data/popmap_main5.tsv")  # seule source pour Ovis_canadensis (absent de POP_DIR)
-VCF_DIR = Path("data/raw data_08_06")  # dossier des VCF bruts par chromosome
-OUTDIR = Path("analyses/synthese_resultats/dstat_9regions_150kb")  # dossier de sortie des résultats
-OUTDIR.mkdir(parents=True, exist_ok=True)  # crée le dossier de sortie si absent
+VCF_DIR = Path("data/raw data_08_06")
+OUTDIR = Path("analyses/synthese_resultats/dstat_9regions_150kb")
+OUTDIR.mkdir(parents=True, exist_ok=True)
 
 P1 = "MiddleEastNonAwassi"  # population 1 (référence, non-Awassi Moyen-Orient)
 P2 = "Awassi"               # population 2 (testée pour introgression)
 OUT = "Ovis_canadensis"     # groupe extérieur (outgroup) servant à polariser les allèles
 
-WINDOW = 150_000     # taille de la fenêtre autour de chaque région (bp)
+WINDOW = 150_000
 BLOCK_SIZE = 15_000  # taille d'un bloc jackknife (bp) -> ~10 blocs par fenêtre
-MIN_SNPS = 15        # nombre minimum de SNPs utilisables pour garder une région
+MIN_SNPS = 15
 MIN_BLOCKS = 5       # nombre minimum de blocs jackknife pour calculer un SE fiable
 
 OUT_LOW = 0.10   # fréquence alt outgroup en dessous : considéré comme allèle ancestral
 OUT_HIGH = 0.90  # fréquence alt outgroup au-dessus : considéré comme allèle dérivé (polarité inversée)
 
 # ── 9 régions strictes, fenêtre stricte FST/fd d'origine + P3 déjà identifié ──
-# (coords des fenêtres strictes, cf. AWASSI_AGENT_LOG.md / project_awassi_candidats)
-# Liste des 9 régions candidates : coordonnées de la fenêtre stricte d'origine + groupe P3 associé
 REGIONS = [
     {"region_id": "chr2_112.8Mb_NIPA2_CYFIP1",   "chr": "2",  "strict_start": 112785001, "strict_end": 112865000, "P3": "Australia"},
     {"region_id": "chr3_129.2Mb_desert",           "chr": "3",  "strict_start": 129220001, "strict_end": 129260000, "P3": "Europe"},
@@ -62,80 +59,79 @@ REGIONS = [
 ]
 
 
-# Lit un fichier texte et renvoie la liste des lignes non vides (sans espaces de bord)
 def read_list(path):
-    with open(path) as f:  # ouvre le fichier en lecture
-        return [x.strip() for x in f if x.strip()]  # une entrée par ligne non vide
+    with open(path) as f:
+        return [x.strip() for x in f if x.strip()]
 
 
 # Extrait la liste des échantillons appartenant à `group` depuis un popmap générique (colonnes échantillon/groupe)
 def read_group_from_popmap(path, group):
-    samples = []  # accumulateur des échantillons du groupe
+    samples = []
     with open(path) as f:
-        f.readline()  # saute la ligne d'en-tête
-        for line in f:  # parcourt chaque échantillon
+        f.readline()
+        for line in f:
             if not line.strip():
-                continue  # ignore les lignes vides
+                continue
             s, g = line.rstrip("\n").split("\t")[:2]  # colonnes échantillon (s) et groupe (g)
             if g == group:
-                samples.append(s)  # garde l'échantillon si son groupe correspond
+                samples.append(s)
     return samples
 
 
 def read_group(group):
     """P1/P2/P3 viennent des popmaps séparés (POP_DIR) ; OUT (Ovis_canadensis)
     n'existe que dans POPMAP_MAIN."""
-    p = POP_DIR / f"{group}.txt"  # chemin du popmap dédié à ce groupe
+    p = POP_DIR / f"{group}.txt"
     if p.exists():
-        return read_list(p)  # cas normal : fichier liste dédié au groupe
-    return read_group_from_popmap(POPMAP_MAIN, group)  # sinon (ex: outgroup) : popmap général
+        return read_list(p)
+    return read_group_from_popmap(POPMAP_MAIN, group)
 
 
 # Calcule la fréquence de l'allèle alternatif pour un sous-ensemble d'échantillons à un site donné
 def alt_freq(gts, idxs):
-    alt = 0  # compteur d'allèles alternatifs (=1)
-    n = 0    # compteur total d'allèles appelés
-    for i in idxs:  # parcourt les index d'échantillons du groupe
-        gt = gts[i].replace("|", "/")  # uniformise le séparateur phasé/non phasé
+    alt = 0
+    n = 0
+    for i in idxs:
+        gt = gts[i].replace("|", "/")
         if gt in {".", "./.", ".|."}:
-            continue  # génotype manquant, ignoré
-        for a in gt.split("/"):  # parcourt les deux allèles du génotype
+            continue
+        for a in gt.split("/"):
             if a == ".":
-                continue  # allèle manquant, ignoré
+                continue
             if a == "0":
-                n += 1  # allèle référence : compte dans le total
+                n += 1
             elif a == "1":
-                alt += 1  # allèle alternatif : compte dans alt
-                n += 1    # et dans le total
-    return None if n == 0 else alt / n  # fréquence alt, ou None si aucun allèle appelé
+                alt += 1
+                n += 1
+    return None if n == 0 else alt / n
 
 
 # Récupère l'ordre des échantillons tel qu'il apparaît dans le VCF restreint au fichier d'échantillons
 def get_sample_order(vcf, sample_file):
-    p1 = subprocess.Popen(["bcftools", "view", "-S", str(sample_file), "-Ou", vcf], stdout=subprocess.PIPE)  # sous-sélectionne les échantillons, sortie BCF non compressée
-    p2 = subprocess.run(["bcftools", "query", "-l"], stdin=p1.stdout, stdout=subprocess.PIPE, text=True, check=True)  # liste les noms d'échantillons dans l'ordre du VCF
-    p1.stdout.close()  # ferme le pipe intermédiaire
-    p1.wait()  # attend la fin du premier processus
-    return p2.stdout.strip().splitlines()  # une ligne = un nom d'échantillon
+    p1 = subprocess.Popen(["bcftools", "view", "-S", str(sample_file), "-Ou", vcf], stdout=subprocess.PIPE)
+    p2 = subprocess.run(["bcftools", "query", "-l"], stdin=p1.stdout, stdout=subprocess.PIPE, text=True, check=True)
+    p1.stdout.close()
+    p1.wait()
+    return p2.stdout.strip().splitlines()
 
 
 # Calcule SE (erreur-type) et Z-score du D-stat par block-jackknife delete-one-block
 def jackknife(num, den, blocks):
     if den == 0:
-        return None, None, 0  # dénominateur nul : D indéfini
+        return None, None, 0
     D = num / den  # D-statistic global = (ABBA-BABA)/(ABBA+BABA)
     values = []  # pseudo-valeurs D obtenues en retirant un bloc à la fois
-    for bnum, bden, bn in blocks.values():  # parcourt chaque bloc jackknife
+    for bnum, bden, bn in blocks.values():
         num_j = num - bnum  # numérateur total moins celui du bloc retiré
         den_j = den - bden  # dénominateur total moins celui du bloc retiré
         if den_j != 0:
             values.append(num_j / den_j)  # D recalculé sans ce bloc (delete-one-block)
-    B = len(values)  # nombre de blocs effectivement utilisés
+    B = len(values)
     if B < MIN_BLOCKS:
         return None, None, B  # pas assez de blocs pour un SE fiable
-    mean_j = sum(values) / B  # moyenne des pseudo-valeurs D
+    mean_j = sum(values) / B
     var = ((B - 1) / B) * sum((x - mean_j) ** 2 for x in values)  # variance jackknife (formule delete-one-block)
-    SE = math.sqrt(var) if var > 0 else None  # erreur-type = racine carrée de la variance jackknife
+    SE = math.sqrt(var) if var > 0 else None
     Z = D / SE if SE and SE > 0 else None  # score Z = D / SE, teste si D diffère significativement de 0
     return SE, Z, B
 
@@ -144,58 +140,58 @@ def jackknife(num, den, blocks):
 def run_region(reg):
     region_id, chrom, strict_start, strict_end, P3 = (
         reg["region_id"], reg["chr"], reg["strict_start"], reg["strict_end"], reg["P3"]
-    )  # déballe les champs du dict région
-    mid = (strict_start + strict_end) // 2  # centre de la région stricte d'origine
-    win_start = mid - WINDOW // 2  # début de la fenêtre élargie 150kb
-    win_end = win_start + WINDOW - 1  # fin de la fenêtre élargie 150kb
+    )
+    mid = (strict_start + strict_end) // 2
+    win_start = mid - WINDOW // 2
+    win_end = win_start + WINDOW - 1
 
-    vcf = str(VCF_DIR / f"awassi_and_basedata_chr{chrom}.vcf.gz")  # VCF source du chromosome concerné
-    print(f"\n{'='*70}\n{region_id} | chr{chrom}:{win_start}-{win_end} (150kb) | P3={P3}")  # log de progression
-    print(f"  (fenêtre stricte d'origine : {strict_start}-{strict_end})")  # rappel de la fenêtre stricte
+    vcf = str(VCF_DIR / f"awassi_and_basedata_chr{chrom}.vcf.gz")
+    print(f"\n{'='*70}\n{region_id} | chr{chrom}:{win_start}-{win_end} (150kb) | P3={P3}")
+    print(f"  (fenêtre stricte d'origine : {strict_start}-{strict_end})")
 
-    groups = {g: read_group(g) for g in [P1, P2, P3, OUT]}  # charge la liste d'échantillons de chaque groupe
-    samples = sorted(set(groups[P1] + groups[P2] + groups[P3] + groups[OUT]))  # union unique de tous les échantillons utiles
-    sample_file = OUTDIR / f"samples_{region_id}.txt"  # fichier temporaire liste d'échantillons pour bcftools -S
-    sample_file.write_text("\n".join(samples) + "\n")  # écrit la liste, un échantillon par ligne
+    groups = {g: read_group(g) for g in [P1, P2, P3, OUT]}
+    samples = sorted(set(groups[P1] + groups[P2] + groups[P3] + groups[OUT]))
+    sample_file = OUTDIR / f"samples_{region_id}.txt"
+    sample_file.write_text("\n".join(samples) + "\n")
 
-    order = get_sample_order(vcf, sample_file)  # ordre des échantillons dans le VCF sous-échantillonné
-    idx = {s: i for i, s in enumerate(order)}  # position de chaque échantillon dans les colonnes GT
-    idx1 = [idx[s] for s in groups[P1] if s in idx]  # indices colonnes des échantillons P1
-    idx2 = [idx[s] for s in groups[P2] if s in idx]  # indices colonnes des échantillons P2
-    idx3 = [idx[s] for s in groups[P3] if s in idx]  # indices colonnes des échantillons P3
-    idxO = [idx[s] for s in groups[OUT] if s in idx]  # indices colonnes des échantillons outgroup
-    print(f"  P1={len(idx1)} P2={len(idx2)} P3={len(idx3)} OUT={len(idxO)}")  # log des effectifs par groupe
+    order = get_sample_order(vcf, sample_file)
+    idx = {s: i for i, s in enumerate(order)}
+    idx1 = [idx[s] for s in groups[P1] if s in idx]
+    idx2 = [idx[s] for s in groups[P2] if s in idx]
+    idx3 = [idx[s] for s in groups[P3] if s in idx]
+    idxO = [idx[s] for s in groups[OUT] if s in idx]
+    print(f"  P1={len(idx1)} P2={len(idx2)} P3={len(idx3)} OUT={len(idxO)}")
 
-    ABBA = BABA = num_tot = den_tot = 0.0  # accumulateurs globaux ABBA/BABA et numérateur/dénominateur du D-stat
-    n_snps = 0  # nombre de SNPs polarisés utilisés
+    ABBA = BABA = num_tot = den_tot = 0.0
+    n_snps = 0
     blocks = defaultdict(lambda: [0.0, 0.0, 0])  # accumulateurs par bloc jackknife : [num, den, n_snps]
 
     pview = subprocess.Popen(
         ["bcftools", "view", "-r", f"{chrom}:{win_start}-{win_end}", "-f", "PASS",
          "-m2", "-M2", "-v", "snps", "-S", str(sample_file), "-Ou", vcf],
         stdout=subprocess.PIPE,
-    )  # filtre : région, variants PASS, biallélique, SNP uniquement, échantillons sélectionnés
+    )
     pquery = subprocess.Popen(
         ["bcftools", "query", "-f", "%CHROM\t%POS[\t%GT]\n"],
         stdin=pview.stdout, stdout=subprocess.PIPE, text=True,
-    )  # extrait CHROM, POS et les génotypes de chaque échantillon
-    pview.stdout.close()  # ferme le pipe intermédiaire côté parent
+    )
+    pview.stdout.close()
 
-    n_read = 0  # nombre total de lignes (SNPs) lues
-    for line in pquery.stdout:  # parcourt chaque SNP renvoyé par bcftools
+    n_read = 0
+    for line in pquery.stdout:
         parts = line.rstrip("\n").split("\t")
         if len(parts) < 3:
-            continue  # ligne incomplète, ignorée
-        pos = int(parts[1])  # position du SNP
-        gts = parts[2:]  # génotypes de tous les échantillons à ce site
+            continue
+        pos = int(parts[1])
+        gts = parts[2:]
         n_read += 1
 
-        o = alt_freq(gts, idxO)  # fréquence allélique alt dans l'outgroup
-        p1a = alt_freq(gts, idx1)  # fréquence allélique alt dans P1
-        p2a = alt_freq(gts, idx2)  # fréquence allélique alt dans P2
-        p3a = alt_freq(gts, idx3)  # fréquence allélique alt dans P3
+        o = alt_freq(gts, idxO)
+        p1a = alt_freq(gts, idx1)
+        p2a = alt_freq(gts, idx2)
+        p3a = alt_freq(gts, idx3)
         if o is None or p1a is None or p2a is None or p3a is None:
-            continue  # donnée manquante dans un des groupes, SNP écarté
+            continue
 
         if o <= OUT_LOW:
             p1, p2, p3 = p1a, p2a, p3a  # outgroup proche de l'ancestral : pas d'inversion
@@ -209,31 +205,30 @@ def run_region(reg):
         num = abba - baba  # contribution de ce SNP au numérateur du D-stat
         den = abba + baba  # contribution de ce SNP au dénominateur du D-stat
 
-        ABBA += abba  # cumul ABBA sur la fenêtre
-        BABA += baba  # cumul BABA sur la fenêtre
-        num_tot += num  # cumul numérateur
-        den_tot += den  # cumul dénominateur
-        n_snps += 1  # un SNP polarisé de plus
+        ABBA += abba
+        BABA += baba
+        num_tot += num
+        den_tot += den
+        n_snps += 1
 
         block_id = int((pos - win_start) // BLOCK_SIZE)  # numéro du bloc jackknife contenant ce SNP
-        blocks[block_id][0] += num  # cumul numérateur du bloc
-        blocks[block_id][1] += den  # cumul dénominateur du bloc
-        blocks[block_id][2] += 1    # cumul nombre de SNPs du bloc
+        blocks[block_id][0] += num
+        blocks[block_id][1] += den
+        blocks[block_id][2] += 1
 
-    pquery.wait()  # attend la fin du process bcftools query
-    pview.wait()   # attend la fin du process bcftools view
+    pquery.wait()
+    pview.wait()
 
-    print(f"  SNPs lus : {n_read} ; SNPs polarisés/utilisés : {n_snps} ; blocs : {len(blocks)}")  # log récapitulatif
+    print(f"  SNPs lus : {n_read} ; SNPs polarisés/utilisés : {n_snps} ; blocs : {len(blocks)}")
 
     if n_snps < MIN_SNPS or den_tot == 0:
         print(f"  [!] Trop peu de SNPs ({n_snps}) ou den=0 — région ignorée")
-        return None  # région non exploitable, aucun résultat renvoyé
+        return None
 
     D = num_tot / den_tot  # D-stat final sur toute la fenêtre = (ABBA-BABA)/(ABBA+BABA)
-    SE, Z, n_blocks = jackknife(num_tot, den_tot, blocks)  # erreur-type et Z-score par block-jackknife
-    print(f"  D={D:.4f}  SE={SE}  Z={Z}  n_blocks={n_blocks}")  # log du résultat
+    SE, Z, n_blocks = jackknife(num_tot, den_tot, blocks)
+    print(f"  D={D:.4f}  SE={SE}  Z={Z}  n_blocks={n_blocks}")
 
-    # construit la ligne de résultat pour cette région
     return {
         "region_id": region_id, "chrom": chrom,
         "strict_start": strict_start, "strict_end": strict_end,
@@ -246,22 +241,22 @@ def run_region(reg):
 
 
 if __name__ == "__main__":
-    results = []  # résultats accumulés pour toutes les régions
-    for reg in REGIONS:  # traite chaque région candidate
+    results = []
+    for reg in REGIONS:
         r = run_region(reg)
         if r is not None:
-            results.append(r)  # ignore les régions écartées (trop peu de SNPs)
+            results.append(r)
 
-    out = OUTDIR / "Dstat_9regions_150kb_blockjackknife.tsv"  # fichier de sortie final
+    out = OUTDIR / "Dstat_9regions_150kb_blockjackknife.tsv"
     cols = ["region_id", "chrom", "strict_start", "strict_end", "window_start", "window_end",
             "window_size", "block_size", "P1", "P2", "P3", "O", "D", "SE", "Z",
-            "ABBA", "BABA", "n_snps", "n_blocks"]  # colonnes du TSV de sortie
+            "ABBA", "BABA", "n_snps", "n_blocks"]
 
     with open(out, "w", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=cols, delimiter="\t")  # écrivain TSV basé sur les colonnes définies
-        writer.writeheader()  # écrit la ligne d'en-tête
+        writer = csv.DictWriter(f, fieldnames=cols, delimiter="\t")
+        writer.writeheader()
         for r in results:
-            writer.writerow(r)  # écrit une ligne par région
+            writer.writerow(r)
 
     print(f"\n{'='*70}\nTerminé — table écrite : {out}")
     print(f"Régions traitées : {len(results)}/{len(REGIONS)}")

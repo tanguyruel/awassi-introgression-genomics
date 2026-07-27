@@ -25,7 +25,6 @@ stage) — généralise scripts/kit/02_annotate_KIT_variants_gene_features.py au
 Usage : python3 40_annotate_variants_9regions_v1.py
 """
 
-# gzip : lit le GFF compressé ; subprocess : appelle bcftools
 import gzip
 import subprocess
 from pathlib import Path
@@ -36,7 +35,7 @@ import pandas as pd
 BASE = Path("analyses/synthese_resultats/annotation_9regions")
 VCF_DIR = BASE / "vcf"
 OUT_DIR = BASE / "tables"
-OUT_DIR.mkdir(parents=True, exist_ok=True)  # crée le dossier de sortie si absent
+OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 GFF = Path("data/reference/Oar_v4.0/GCF_000298735.2_Oar_v4.0_genomic.gff.gz")
 FLANK = 300_000  # fenêtre élargie pour trouver le gène le plus proche si intergénique
@@ -55,7 +54,6 @@ REGIONS = [
 ]
 
 # Reprise telle quelle de scripts/02_fst/09_annotation/09_extract_genes_candidate_regions_OarV4.py
-# table de correspondance numéro de chromosome -> identifiant RefSeq utilisé dans le GFF
 CHR_TO_ACCESSION = {
     "1": "NC_019458.2", "2": "NC_019459.2", "3": "NC_019460.2", "4": "NC_019461.2",
     "5": "NC_019462.2", "6": "NC_019463.2", "7": "NC_019464.2", "8": "NC_019465.2",
@@ -88,10 +86,10 @@ features = []
 with gzip.open(GFF, "rt") as f:  # lecture directe du GFF gzippé, ligne par ligne (fichier volumineux)
     for line in f:
         if line.startswith("#"):
-            continue  # ligne d'en-tête/commentaire GFF
+            continue
         p = line.rstrip("\n").split("\t")
         if len(p) < 9:
-            continue  # ligne mal formée, ignorée
+            continue
         seqid, source, ftype, start, end, score, strand, phase, attr = p  # 9 colonnes standard du GFF
         if ftype == "region":
             continue  # feature structurelle couvrant tout le chromosome (GFF RefSeq), pas un gène
@@ -101,17 +99,16 @@ with gzip.open(GFF, "rt") as f:  # lecture directe du GFF gzippé, ligne par lig
                 a = parse_attr(attr)
                 features.append({
                     "seqid": seqid, "feature": ftype, "start": start, "end": end,
-                    "strand": strand, "gene": a.get("gene", a.get("Name", "")),  # nom du gène si présent
+                    "strand": strand, "gene": a.get("gene", a.get("Name", "")),
                 })
                 break  # inutile de tester les autres fenêtres, la feature est déjà retenue
 
 features_df = pd.DataFrame(features)
-genes_df = features_df[features_df["feature"] == "gene"].copy()  # sous-table des seules features "gene"
+genes_df = features_df[features_df["feature"] == "gene"].copy()
 print(f"  {len(features_df)} features chargées, {len(genes_df)} gènes.")
 
 
 def nearest_gene(seqid, pos):
-    # cherche le gène le plus proche d'une position, sur le même chromosome
     g = genes_df[genes_df["seqid"] == seqid]
     if g.empty:
         return "", np.nan, ""  # aucun gène connu sur ce chromosome dans la fenêtre chargée
@@ -126,8 +123,8 @@ def nearest_gene(seqid, pos):
     g = g.dropna(subset=["dist"])
     if g.empty:
         return "", np.nan, ""
-    row = g.loc[g["dist"].idxmin()]  # le gène avec la plus petite distance
-    side = "upstream" if row["start"] > pos else "downstream"  # position du gène par rapport au SNP
+    row = g.loc[g["dist"].idxmin()]
+    side = "upstream" if row["start"] > pos else "downstream"
     return row["gene"], int(row["dist"]), side
 
 
@@ -141,7 +138,7 @@ def annotate_pos(seqid, pos):
             "feature_class": "intergenic", "gene": gene,
             "nearest_gene_distance_bp": dist, "nearest_gene_side": side,
         })
-    genes_here = sorted(set(g for g in ov["gene"] if g))  # gène(s) chevauchant cette position
+    genes_here = sorted(set(g for g in ov["gene"] if g))
     feats_here = set(ov["feature"])  # types de features chevauchant (CDS, exon, mRNA, gene...)
     # priorité décroissante : CDS > exon > intron/transcrit > gène sans transcrit > autre
     if "CDS" in feats_here:
@@ -165,7 +162,7 @@ all_rows = []
 for r in REGIONS:
     acc = CHR_TO_ACCESSION[r["chr"]]
     vcf = VCF_DIR / f'{r["region_id"]}.vcf.gz'
-    out = subprocess.run(  # liste chrom/position/ref/alt de tous les SNP du VCF de la région
+    out = subprocess.run(
         ["bcftools", "query", "-f", "%CHROM\t%POS\t%REF\t%ALT\n", str(vcf)],
         capture_output=True, text=True, check=True,
     ).stdout
@@ -173,14 +170,14 @@ for r in REGIONS:
     for line in out.splitlines():
         chrom, pos, ref, alt = line.split("\t")
         pos = int(pos)
-        ann = annotate_pos(acc, pos)  # classification fonctionnelle de ce SNP
+        ann = annotate_pos(acc, pos)
         all_rows.append({
             "region_id": r["region_id"], "chr": r["chr"], "pos": pos,
             "ref": ref, "alt": alt, "P3_best": r["P3_best"],
             **ann.to_dict(),
         })
 
-df = pd.DataFrame(all_rows)  # une ligne par SNP annoté, toutes régions confondues
+df = pd.DataFrame(all_rows)
 out_all = OUT_DIR / "variants_all_annotated.tsv"
 df.to_csv(out_all, sep="\t", index=False)
 
@@ -193,7 +190,7 @@ summary = (
 out_sum = OUT_DIR / "variants_summary_by_region.tsv"
 summary.to_csv(out_sum, sep="\t", index=False)
 
-exonic = df[df["feature_class"].isin(["CDS", "exon_non_CDS_or_UTR"])].copy()  # sous-ensemble codant/exonique
+exonic = df[df["feature_class"].isin(["CDS", "exon_non_CDS_or_UTR"])].copy()
 out_cds = OUT_DIR / "variants_CDS_exonic.tsv"
 exonic.to_csv(out_cds, sep="\t", index=False)
 
@@ -203,4 +200,4 @@ print(f"→ {out_sum}")
 print(f"→ {out_cds} ({len(exonic)} variants CDS/exoniques)")
 print()
 print("Résumé par région (top feature_class) :")
-print(summary.groupby("region_id").head(3).to_string(index=False))  # aperçu : 3 classes principales par région
+print(summary.groupby("region_id").head(3).to_string(index=False))

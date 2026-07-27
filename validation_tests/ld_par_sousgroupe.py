@@ -21,7 +21,6 @@ rapport de stage). Usage : python3 ld_par_sousgroupe.py  (nécessite heatmap_hap
 dans le même dossier, importé directement)
 """
 
-# ── Imports : import dynamique de module, chemins, calcul, tables ──
 import importlib.util
 from pathlib import Path
 import numpy as np
@@ -31,19 +30,19 @@ import pandas as pd
 # directement ses fonctions (load_haplotypes, restrict_positions,
 # filter_snps, compute_r2) sans dupliquer le code ──
 SCRIPT_HEATMAP = Path(__file__).with_name("heatmap_haplotypes_arbre_ld.py")  # même dossier
-spec = importlib.util.spec_from_file_location("heatmap_ld", SCRIPT_HEATMAP)  # spec du module à charger dynamiquement
+spec = importlib.util.spec_from_file_location("heatmap_ld", SCRIPT_HEATMAP)
 heatmap_ld = importlib.util.module_from_spec(spec)  # instancie le module (vide pour l'instant)
 spec.loader.exec_module(heatmap_ld)  # exécute heatmap_haplotypes_arbre_ld.py -> ses fonctions deviennent accessibles via heatmap_ld.xxx
 
 POP_DIR = Path("analyses/fst/popmaps_separees_v1")  # dossier des popmaps (listes d'individus par groupe)
-OUTDIR = Path("analyses/synthese_resultats/ld_per_subgroup_9regions")  # dossier de sortie de la table
-OUTDIR.mkdir(parents=True, exist_ok=True)  # crée le dossier de sortie s'il n'existe pas
+OUTDIR = Path("analyses/synthese_resultats/ld_per_subgroup_9regions")
+OUTDIR.mkdir(parents=True, exist_ok=True)
 
-MAX_MISSING = 0.05  # seuil max de génotypes manquants toléré par SNP
-MIN_MAF = 0.05  # fréquence allélique mineure minimale pour garder un SNP
+MAX_MISSING = 0.05
+MIN_MAF = 0.05
 
 # (chr, start, end, P3, vcf) — mêmes fenêtres et VCF phasés que heatmap_haplotypes_arbre_ld.py
-REGIONS = [  # une entrée par région, mêmes 9 régions/VCF que le heatmap_haplotypes_arbre_ld.py
+REGIONS = [
     {"region_id": "chr3_129.2Mb_desert", "chr": 3, "start": 129220001, "end": 129260000, "P3": "Europe",
      "vcf": "analyses/phasing_beagle/Phasing_Beagle_v2_5regions_v10b/phased/chr3_129.22_129.26Mb.beagle_phased.vcf.gz"},
     {"region_id": "chr17_SPATA5", "chr": 17, "start": 34160001, "end": 34220000, "P3": "Asia",
@@ -66,7 +65,7 @@ REGIONS = [  # une entrée par région, mêmes 9 régions/VCF que le heatmap_hap
 
 
 def ld_summary_for_subset(H, positions, mask):
-    Hs = H[mask, :]  # sous-matrice des haplotypes appartenant au sous-groupe (mask booléen)
+    Hs = H[mask, :]
     if Hs.shape[0] < 4:
         return None  # trop peu d'haplotypes pour un LD fiable
     try:
@@ -75,21 +74,21 @@ def ld_summary_for_subset(H, positions, mask):
         return None  # moins de 2 SNP après filtre -> sous-groupe ignoré
     r2, ld_pos = heatmap_ld.compute_r2(Hf, posf)  # LD (r²) calculé dans ce sous-groupe uniquement (fonction de heatmap_haplotypes_arbre_ld.py)
     tri = np.tril_indices(len(ld_pos), k=-1)  # indices du triangle inférieur (paires uniques, hors diagonale)
-    vals = r2[tri]  # valeurs r² de toutes les paires de SNP
-    off = vals[np.isfinite(vals)]  # exclut les valeurs non finies
+    vals = r2[tri]
+    off = vals[np.isfinite(vals)]
     if len(off) == 0:
         return None
     return {
         "n_haplotypes": Hs.shape[0], "n_snps_used": len(ld_pos),
         "mean_r2": float(np.nanmean(off)), "median_r2": float(np.nanmedian(off)),
-        "prop_r2_ge_0.5": float(np.mean(off >= 0.5)), "prop_r2_ge_0.8": float(np.mean(off >= 0.8)),  # proportions de paires en fort LD
+        "prop_r2_ge_0.5": float(np.mean(off >= 0.5)), "prop_r2_ge_0.8": float(np.mean(off >= 0.8)),
     }
 
 
 def compute_region(reg):
     region_id, chrom, start, end, p3, vcf = (
         reg["region_id"], reg["chr"], reg["start"], reg["end"], reg["P3"], reg["vcf"]
-    )  # déballe les paramètres de la région
+    )
     print(f"\n{'='*70}\n{region_id} | P3={p3}")
 
     group_order = ["Awassi", "MiddleEastNonAwassi", p3]
@@ -106,7 +105,7 @@ def compute_region(reg):
         "Awassi+ME+P3_combine": np.isin(groups, ["Awassi", "MiddleEastNonAwassi", p3]),
     }
     for label, mask in subsets.items():
-        res = ld_summary_for_subset(H, positions, mask)  # LD résumé pour ce sous-groupe
+        res = ld_summary_for_subset(H, positions, mask)
         if res is None:
             print(f"  {label:22s} : insuffisant (trop peu d'haplotypes/SNPs après filtre)")
             continue
@@ -120,7 +119,7 @@ def compute_region(reg):
 if __name__ == "__main__":
     all_rows = []
     for reg in REGIONS:
-        all_rows += compute_region(reg)  # calcule le LD par sous-groupe pour chaque région
+        all_rows += compute_region(reg)
 
     df = pd.DataFrame(all_rows)
     out_tsv = OUTDIR / "LD_per_subgroup_9regions.tsv"

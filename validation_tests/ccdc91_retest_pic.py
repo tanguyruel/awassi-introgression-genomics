@@ -45,7 +45,6 @@ le VCF déjà phasé, hors de ce dépôt).
 Usage : python3 ccdc91_retest_pic.py
 """
 
-# ── Imports : import dynamique de module, combinatoire, chemins, calcul ──
 import importlib.util
 from math import comb
 from pathlib import Path
@@ -54,9 +53,9 @@ import numpy as np
 
 PROJ = Path("/home/tanguyruel/Bureau/genome_complet_Awassi")  # chemin en dur à adapter (dossier de travail, hors dépôt)
 
-# ── Import dynamique de partage_haplotypes_tous_groupes.py (même dossier que ce
+# Import dynamique de partage_haplotypes_tous_groupes.py (même dossier que ce
 # script), pour réutiliser ses fonctions (load_pop, read_haplotypes, filter_snps,
-# mismatch_matrix) sans dupliquer le code ──
+# mismatch_matrix) sans dupliquer le code
 SCRIPT_PARTAGE = Path(__file__).with_name("partage_haplotypes_tous_groupes.py")
 spec = importlib.util.spec_from_file_location("partage_haplotypes", SCRIPT_PARTAGE)
 m64 = importlib.util.module_from_spec(spec)
@@ -64,7 +63,7 @@ spec.loader.exec_module(m64)  # exécute le script -> ses fonctions deviennent a
 
 VCF = (PROJ / "analyses/phasing_beagle/Phasing_Beagle_v1_5regions/phased/"
        "chr3_186.07_186.12Mb.beagle_phased.vcf.gz")  # VCF phasé de la région CCDC91
-OUT = PROJ / "analyses/synthese_resultats/CCDC91_peak_core_retest.tsv"  # fichier de sortie
+OUT = PROJ / "analyses/synthese_resultats/CCDC91_peak_core_retest.tsv"
 
 K, N_BOOT, THRESH = 16, 2000, 0.01  # taille de tirage (raréfaction), nb de bootstraps, seuil "jumeau"
 CANDIDATES = ["Africa", "Asia", "Europe", "America", "Australia"]  # groupes P3 candidats testés
@@ -91,7 +90,7 @@ def rarefied_score(D_by_group, group, k=K):
         d = D[i]  # mésappariements de l'haplotype Awassi i avec tous les haplotypes du groupe
         m = int(np.sum(d[~np.isnan(d)] < THRESH))     # nb de jumeaux disponibles
         if m == 0:
-            probs.append(0.0)  # aucun jumeau -> probabilité nulle pour cet haplotype
+            probs.append(0.0)
         else:
             # P(au moins un jumeau dans un tirage de k parmi n)
             probs.append(1.0 - comb(n - m, k) / comb(n, k) if n - m >= k else 1.0)
@@ -100,7 +99,7 @@ def rarefied_score(D_by_group, group, k=K):
 
 def main():
     pops = m64.load_pop()  # groupes -> ensembles d'échantillons (fonction de partage_haplotypes_tous_groupes.py)
-    rows = []  # résultats accumulés (une ligne par fenêtre)
+    rows = []
 
     for tag, start, end, note in WINDOWS:
         H, samples = m64.read_haplotypes(VCF, "3", start, end)  # charge la matrice haplotypes x SNP de la fenêtre (fonction de partage_haplotypes_tous_groupes.py)
@@ -113,11 +112,11 @@ def main():
                     if s in members for h in (0, 1)]  # indices des 2 haplotypes de chaque individu du groupe g
             if cols:
                 idx[g] = np.array(cols)
-        A = H[idx["Awassi"]]  # sous-matrice des haplotypes Awassi
+        A = H[idx["Awassi"]]
         D_by_group = {g: m64.mismatch_matrix(A, H[idx[g]])
                       for g in CANDIDATES if g in idx}  # mésappariement Awassi x chaque groupe candidat (fonction de partage_haplotypes_tous_groupes.py)
 
-        scores = {g: rarefied_score(D_by_group, g) for g in D_by_group}  # score de raréfaction exact par groupe
+        scores = {g: rarefied_score(D_by_group, g) for g in D_by_group}
         best_other = max((g for g in scores if g != P3_REGION),
                          key=lambda g: scores[g])  # meilleur groupe concurrent du P3 retenu (Asia)
         marge = scores[P3_REGION] - scores[best_other]  # marge observée du P3 sur son meilleur concurrent
@@ -127,9 +126,9 @@ def main():
         boot = []
         for _ in range(N_BOOT):
             pick = RNG.integers(0, n_ind, n_ind)  # tirage avec remise de n_ind individus
-            hap = np.concatenate([[2 * p, 2 * p + 1] for p in pick])  # les 2 haplotypes de chaque individu tiré
+            hap = np.concatenate([[2 * p, 2 * p + 1] for p in pick])
             Db = {g: D_by_group[g][hap] for g in D_by_group}  # mésappariements restreints à cet échantillon bootstrap
-            sc = {g: rarefied_score(Db, g) for g in Db}  # score de chaque groupe sur cet échantillon
+            sc = {g: rarefied_score(Db, g) for g in Db}
             bo = max((g for g in sc if g != P3_REGION), key=lambda g: sc[g])  # meilleur concurrent sur ce tirage
             boot.append(sc[P3_REGION] - sc[bo])  # marge sur ce tirage bootstrap
         lo, hi = np.percentile(boot, [2.5, 97.5])  # intervalle de confiance à 95% de la marge (percentiles bootstrap)
@@ -147,13 +146,13 @@ def main():
         rows.append([tag, f"chr3:{start/1e6:.3f}-{end/1e6:.3f}", str(n_snps),
                      f"{scores[P3_REGION]:.2f}", best_other,
                      f"{scores[best_other]:.2f}", f"{marge:+.2f}",
-                     f"[{lo:+.2f} ; {hi:+.2f}]", verdict])  # ligne de résultat pour cette fenêtre
+                     f"[{lo:+.2f} ; {hi:+.2f}]", verdict])
 
     with open(OUT, "w", encoding="utf-8") as fh:
         fh.write("fenetre\tcoordonnees\tn_snps\tscore_Asia\tmeilleur_autre\t"
-                 "score_meilleur_autre\tmarge\tIC95\tverdict\n")  # en-tête du TSV
+                 "score_meilleur_autre\tmarge\tIC95\tverdict\n")
         for r in rows:
-            fh.write("\t".join(r) + "\n")  # une ligne par fenêtre testée
+            fh.write("\t".join(r) + "\n")
     print(f"\nÉcrit : {OUT}")
 
 
