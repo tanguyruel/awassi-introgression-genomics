@@ -66,7 +66,7 @@ CHR_TO_ACCESSION = {
 
 
 def parse_attr(attr):
-    # transforme la colonne 9 du GFF ("ID=x;gene=y;...") en dictionnaire {clé: valeur}
+    """Transforme la colonne 9 du GFF ("ID=x;gene=y;...") en dictionnaire {clé: valeur}."""
     d = {}
     for item in attr.split(";"):
         if "=" in item:
@@ -109,6 +109,22 @@ print(f"  {len(features_df)} features chargées, {len(genes_df)} gènes.")
 
 
 def nearest_gene(seqid, pos):
+    """Cherche le gène le plus proche d'une position intergénique.
+
+    Parameters
+    ----------
+    seqid : str
+        Accession du chromosome (ex: "NC_019474.2").
+    pos : int
+        Position (pb) sur ce chromosome.
+
+    Returns
+    -------
+    tuple[str, float, str]
+        Nom du gène (vide si aucun trouvé), distance en pb (0 si à l'intérieur
+        d'un gène, NaN si aucun gène dans la fenêtre chargée) et côté
+        ("inside", "upstream" ou "downstream").
+    """
     g = genes_df[genes_df["seqid"] == seqid]
     if g.empty:
         return "", np.nan, ""  # aucun gène connu sur ce chromosome dans la fenêtre chargée
@@ -129,7 +145,24 @@ def nearest_gene(seqid, pos):
 
 
 def annotate_pos(seqid, pos):
-    # classe une position du génome : quelle(s) feature(s) GFF la couvrent exactement ?
+    """Classe une position du génome selon la ou les features GFF qui la couvrent.
+
+    Priorité décroissante : CDS > exon > intron/transcrit non codant > gène
+    sans transcrit annoté > intergénique (auquel cas le gène le plus proche
+    est cherché via nearest_gene).
+
+    Parameters
+    ----------
+    seqid : str
+        Accession du chromosome.
+    pos : int
+        Position (pb) sur ce chromosome.
+
+    Returns
+    -------
+    pandas.Series
+        feature_class, gene, nearest_gene_distance_bp, nearest_gene_side.
+    """
     ov = features_df[(features_df["seqid"] == seqid) & (features_df["start"] <= pos) & (features_df["end"] >= pos)]
     if ov.empty:
         # aucune feature ne couvre cette position -> intergénique, on cherche le gène le plus proche

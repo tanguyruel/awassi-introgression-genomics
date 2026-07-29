@@ -6,9 +6,10 @@
 # complément 03_resume_..._skip_done.sh).
 # Entrée : VCF chr (data/raw data_08_06/ ou raw_data_08_06/), metadata
 # Sortie : <outdir>/fd_chr<N>_all_awassi_pairs_20kb_step5kb.tsv.gz
-# Usage  : python3 02_fd_chr_all_awassi_pairs_20kb_step5kb.py --chrom <N> --outdir <outdir> [--groups g1,g2,...]
-# IMPORTANT : PROJECT ci-dessous est un chemin absolu en dur (machine d'origine) — à adapter
-# si le dépôt est cloné ailleurs.
+# Usage  : python3 02_fd_chr_all_awassi_pairs_20kb_step5kb.py --chrom <N> --outdir <outdir> [--groups g1,g2,...] [--project <dossier>]
+# Le dossier racine des données (contenant data/ et analyses/, hors dépôt) se règle
+# via --project, sinon la variable d'environnement AWASSI_PROJECT_DIR, sinon le
+# répertoire courant.
 #
 from pathlib import Path
 import argparse
@@ -20,14 +21,6 @@ import gzip
 import math
 import numpy as np
 import pandas as pd
-
-PROJECT = Path("/home/tanguyruel/Bureau/genome_complet_Awassi")  # chemin en dur à adapter
-
-# liste des chemins de metadata possibles (le premier trouvé est utilisé)
-METADATA_CANDIDATES = [
-    PROJECT / "analyses/haplotype_heatmap/Awassi_haplo/data/metadata/sample_metadata_387_FST_groups.tsv",
-    PROJECT / "analyses/synthese_resultats/nnt/06_NNT_indiv_pairwise_base_metadata/results/metadata_used.tsv",
-]
 
 WINDOW = 20_000  # taille de fenêtre (pb)
 STEP = 5_000  # pas entre fenêtres (pb)
@@ -49,13 +42,35 @@ EXCLUDE_GROUP_PATTERNS = [
 ]
 
 def run(cmd):
+    """Exécute `cmd` et retourne sa sortie standard (texte)."""
     return subprocess.check_output(cmd, text=True)
 
 def parse_bool(x):
+    """Convertit une valeur texte de metadata (ex: "oui"/"1") en booléen."""
     return str(x).strip().lower() in {"true", "1", "yes", "oui"}
 
-def load_metadata():
-    for p in METADATA_CANDIDATES:
+def load_metadata(project):
+    """Charge la table de metadata des échantillons.
+
+    Cherche parmi les emplacements candidats sous `project` et utilise le
+    premier fichier trouvé.
+
+    Parameters
+    ----------
+    project : pathlib.Path
+        Dossier racine des données (contient le sous-dossier analyses/).
+
+    Returns
+    -------
+    pandas.DataFrame
+        Metadata dédupliquée par échantillon, avec au moins les colonnes
+        sample, group et is_awassi.
+    """
+    metadata_candidates = [
+        project / "analyses/haplotype_heatmap/Awassi_haplo/data/metadata/sample_metadata_387_FST_groups.tsv",
+        project / "analyses/synthese_resultats/nnt/06_NNT_indiv_pairwise_base_metadata/results/metadata_used.tsv",
+    ]
+    for p in metadata_candidates:
         if p.exists():
             meta = pd.read_csv(p, sep="\t")
             print(f"Metadata utilisée : {p}")
@@ -82,13 +97,28 @@ def load_metadata():
     return meta.drop_duplicates("sample")
 
 def is_excluded_group(g):
+    """True si le nom de groupe `g` matche un des motifs EXCLUDE_GROUP_PATTERNS."""
     g = str(g)
     return any(re.search(pat, g, flags=re.IGNORECASE) for pat in EXCLUDE_GROUP_PATTERNS)
 
-def get_vcf(chrom):
+def get_vcf(chrom, project):
+    """Trouve le VCF du chromosome demandé sous `project`.
+
+    Parameters
+    ----------
+    chrom : str
+        Nom du chromosome (ex: "16").
+    project : pathlib.Path
+        Dossier racine des données.
+
+    Returns
+    -------
+    pathlib.Path
+        Chemin du premier VCF candidat qui existe.
+    """
     candidates = [
-        PROJECT / f"data/raw data_08_06/awassi_and_basedata_chr{chrom}.vcf.gz",
-        PROJECT / f"data/raw_data_08_06/awassi_and_basedata_chr{chrom}.vcf.gz",
+        project / f"data/raw data_08_06/awassi_and_basedata_chr{chrom}.vcf.gz",
+        project / f"data/raw_data_08_06/awassi_and_basedata_chr{chrom}.vcf.gz",
     ]
     for p in candidates:
         if p.exists():
@@ -214,6 +244,7 @@ def build_comparisons(partners):
     return comps
 
 def gt_to_alt_count(gt):
+    """Convertit un génotype VCF (ex: "0/1") en nombre de copies de l'allèle alternatif (0, 1 ou 2, NaN si manquant/ambigu)."""
     gt = str(gt).split(":")[0]  # garde seulement le champ GT (avant les ":")
     if gt in {"./.", ".|.", "."}:
         return np.nan
@@ -230,6 +261,22 @@ def gt_to_alt_count(gt):
         return np.nan
 
 def allele_freq_alt(counts, idx):
+    """Fréquence de l'allèle alternatif pour un sous-ensemble d'échantillons.
+
+    Parameters
+    ----------
+    counts : numpy.ndarray
+        Nombre de copies de l'allèle alt par échantillon (voir gt_to_alt_count),
+        NaN si non génotypé.
+    idx : numpy.ndarray
+        Indices des échantillons du groupe dans `counts`.
+
+    Returns
+    -------
+    tuple[float, int]
+        Fréquence alt (NaN si le groupe est vide ou insuffisamment génotypé)
+        et nombre d'échantillons effectivement génotypés.
+    """
     vals = counts[idx]
     vals = vals[~np.isnan(vals)]
 
@@ -244,7 +291,32 @@ def allele_freq_alt(counts, idx):
 
     return vals.sum() / (2 * n_called), n_called  # fréquence alt = somme des comptes / (2 x nb génotypés)
 
-def extract_and_polarize(chrom, vcf, groups, selected_order, outdir):  # polarisation par l'outgroup
+def extract_and_polarize(chrom, vcf, groups, selected_order, outdir):
+    """Extrait les SNP bialléliques PASS du VCF et calcule, par groupe, la fréquence de l'allèle dérivé.
+
+    La polarité (ancestral/dérivé) est déterminée par l'outgroup Ovis_canadensis :
+    un site est retenu seulement si l'outgroup est quasi fixé pour un allèle
+    (fréquence <= OUTGROUP_FIXED_THRESHOLD ou >= 1 - OUTGROUP_FIXED_THRESHOLD).
+
+    Parameters
+    ----------
+    chrom : str
+        Nom du chromosome.
+    vcf : pathlib.Path
+        VCF source.
+    groups : dict[str, list[str]]
+        Groupe -> liste d'échantillons.
+    selected_order : list[str]
+        Échantillons à extraire, dans l'ordre utilisé pour les index de groupe.
+    outdir : pathlib.Path
+        Dossier de sortie (le tableau de fréquences y est aussi sauvegardé).
+
+    Returns
+    -------
+    pandas.DataFrame
+        Une ligne par SNP polarisé utilisable, colonnes = pos + une colonne
+        de fréquence par groupe (hors outgroup).
+    """
     sample_to_idx = {s: i for i, s in enumerate(selected_order)}
 
     group_idx = {}
@@ -349,7 +421,20 @@ def extract_and_polarize(chrom, vcf, groups, selected_order, outdir):  # polaris
 
     return freqs
 
-def compute_D_fd(p1, p2, p3):  # statistiques D (ABBA-BABA) et fd pour un jeu de fréquences P1/P2/P3
+def compute_D_fd(p1, p2, p3):
+    """Calcule les statistiques D (ABBA-BABA) et fd de Martin et al. (2015).
+
+    Parameters
+    ----------
+    p1, p2, p3 : numpy.ndarray
+        Fréquences de l'allèle dérivé par site pour les groupes P1, P2 (Awassi) et P3.
+
+    Returns
+    -------
+    tuple
+        (D, fd, somme ABBA, somme BABA, numérateur, dénominateur de D,
+        dénominateur de fd). D et fd valent NaN si leur dénominateur est nul.
+    """
     ABBA = (1 - p1) * p2 * p3  # poids du motif ABBA (site dérivé chez P2 et P3, pas chez P1)
     BABA = p1 * (1 - p2) * p3  # poids du motif BABA (site dérivé chez P1 et P3, pas chez P2)
 
@@ -366,7 +451,25 @@ def compute_D_fd(p1, p2, p3):  # statistiques D (ABBA-BABA) et fd pour un jeu de
 
     return D, fd, float(np.nansum(ABBA)), float(np.nansum(BABA)), float(num), float(den_D), float(den_fd)
 
-def scan_fd(chrom, freqs, comparisons, outdir):  # parcourt le chromosome en fenêtres glissantes et calcule D/fd pour chaque comparaison
+def scan_fd(chrom, freqs, comparisons, outdir):
+    """Parcourt le chromosome en fenêtres glissantes et calcule D/fd pour chaque comparaison.
+
+    Parameters
+    ----------
+    chrom : str
+        Nom du chromosome.
+    freqs : pandas.DataFrame
+        Fréquences par SNP et par groupe (issu de extract_and_polarize).
+    comparisons : list[dict]
+        Comparaisons P1/P2/P3/O à évaluer (issu de build_comparisons).
+    outdir : pathlib.Path
+        Dossier de sortie du tableau de résultats.
+
+    Returns
+    -------
+    pathlib.Path
+        Chemin du fichier TSV.gz écrit (une ligne par fenêtre x comparaison).
+    """
     if freqs.empty:
         raise RuntimeError(f"Pas de SNPs polarisés pour chr{chrom}")
 
@@ -433,25 +536,34 @@ def scan_fd(chrom, freqs, comparisons, outdir):  # parcourt le chromosome en fen
     return out_path
 
 def main():
+    """Point d'entrée CLI : calcule fd/D genome-wide pour un chromosome donné."""
     ap = argparse.ArgumentParser()
     ap.add_argument("--chrom", required=True, help="Chromosome, ex: 16")
     ap.add_argument("--outdir", required=True)
     ap.add_argument("--groups", default="", help="Optionnel: groupes séparés par virgule")
+    ap.add_argument(
+        "--project",
+        default=os.environ.get("AWASSI_PROJECT_DIR", str(Path.cwd())),
+        help="Dossier racine des données (contient data/ et analyses/). "
+             "Par défaut : variable d'environnement AWASSI_PROJECT_DIR, sinon le répertoire courant.",
+    )
     args = ap.parse_args()
 
     chrom = str(args.chrom)
     outdir = Path(args.outdir)
     outdir.mkdir(parents=True, exist_ok=True)
+    project = Path(args.project)
 
     print("============================================================")
     print(f"fd genome-wide par chromosome — chr{chrom}")
     print("============================================================")
     print(f"WINDOW={WINDOW} STEP={STEP} MIN_SNPS={MIN_SNPS}")
+    print(f"PROJECT : {project}")
 
-    vcf = get_vcf(chrom)
+    vcf = get_vcf(chrom, project)
     print(f"VCF : {vcf}")
 
-    meta = load_metadata()
+    meta = load_metadata(project)
 
     vcf_samples = run(["bcftools", "query", "-l", str(vcf)]).splitlines()
     groups, partners = choose_groups(meta, vcf_samples, args.groups)

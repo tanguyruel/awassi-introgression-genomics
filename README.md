@@ -142,6 +142,12 @@ Les VCF bruts et les résultats intermédiaires volumineux ne sont pas inclus (t
 données génétiques dont la redistribution n'est pas garantie). Les tables de résultats
 filtrées citées dans le rapport (régions candidates, métriques par test) sont disponibles sur demande.
 
+## Remerciements
+
+Merci à François, Océane et Frédéric Boyer (LECA) pour leur accompagnement pendant le
+stage. Merci en particulier à Frédéric pour nos échanges sur l'introgression, ses idées
+de méthode, et son aide sur heatmap + arbre + LD (`heatmap_haplotypes_arbre_ld.py`).
+
 ## Citation
 
 Code disponible pour accompagner : Ruel T., *Introgression génomique chez le mouton

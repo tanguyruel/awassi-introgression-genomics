@@ -48,7 +48,7 @@ REGIONS = [  # (préfixe de fichiers de la région, groupe P3 associé) pour les
 
 
 def string_to_array(s):
-    # convertit une allele_string ("0"/"1"/"N") en tableau numpy (0/1/-1 pour manquant)
+    """Convertit une allele_string ("0"/"1"/"N") en tableau numpy (0/1/-1 pour manquant)."""
     return np.array([{"0": 0, "1": 1, "N": -1}.get(c, -1) for c in s], dtype=np.int8)
 
 
@@ -67,6 +67,20 @@ def min_mismatch_fracs(A, B):
 
 
 def load_matrices(prefix, p3):
+    """Charge les matrices haplotypes x SNP d'Awassi et du groupe P3 depuis le row_order.tsv déjà calculé.
+
+    Parameters
+    ----------
+    prefix : str
+        Préfixe de fichiers de la région (voir REGIONS).
+    p3 : str
+        Nom du groupe P3 associé à cette région.
+
+    Returns
+    -------
+    tuple[numpy.ndarray, numpy.ndarray]
+        (A, B) : matrices d'haplotypes (0/1/-1) d'Awassi et de P3.
+    """
     df = pd.read_csv(HEATMAP_DIR / f"{prefix}_row_order.tsv", sep="\t")
     awassi = df[df["group"] == "Awassi"]
     p3_df = df[df["group"] == p3]

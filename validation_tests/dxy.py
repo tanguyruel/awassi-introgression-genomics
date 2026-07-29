@@ -6,9 +6,10 @@
 #          VCF correspondants, metadata
 # Sortie : <outdir>/<region_id>_dxy_20kb_step5kb.tsv, _dxy_by_site.tsv.gz,
 #          _dxy_ranked_by_lowest.tsv
-# Usage  : python3 02_compute_dxy_local_candidates.py --regions <regions.tsv> --outdir <outdir>
-# IMPORTANT : PROJECT ci-dessous est un chemin absolu en dur (machine d'origine) — à adapter
-# si le dépôt est cloné ailleurs.
+# Usage  : python3 02_compute_dxy_local_candidates.py --regions <regions.tsv> --outdir <outdir> [--project <dossier>]
+# Le dossier racine des données (contenant data/ et analyses/, hors dépôt) se règle
+# via --project, sinon la variable d'environnement AWASSI_PROJECT_DIR, sinon le
+# répertoire courant.
 #
 from pathlib import Path
 import argparse
@@ -18,14 +19,6 @@ import os
 import re
 import numpy as np
 import pandas as pd
-
-PROJECT = Path("/home/tanguyruel/Bureau/genome_complet_Awassi")  # chemin en dur à adapter
-
-# liste des chemins de metadata possibles (le premier trouvé est utilisé)
-METADATA_CANDIDATES = [
-    PROJECT / "analyses/haplotype_heatmap/Awassi_haplo/data/metadata/sample_metadata_387_FST_groups.tsv",
-    PROJECT / "analyses/synthese_resultats/nnt/06_NNT_indiv_pairwise_base_metadata/results/metadata_used.tsv",
-]
 
 WINDOW = 20_000
 STEP = 5_000
@@ -44,13 +37,35 @@ TARGET_GROUPS = [
 ]
 
 def run(cmd):
+    """Exécute `cmd` et retourne sa sortie standard (texte)."""
     return subprocess.check_output(cmd, text=True)
 
 def parse_bool(x):
+    """Convertit une valeur texte de metadata (ex: "oui"/"1") en booléen."""
     return str(x).strip().lower() in {"true", "1", "yes", "oui"}
 
-def load_metadata():  # charge la table de metadata des échantillons (premier fichier trouvé)
-    for p in METADATA_CANDIDATES:
+def load_metadata(project):
+    """Charge la table de metadata des échantillons.
+
+    Cherche parmi les emplacements candidats sous `project` et utilise le
+    premier fichier trouvé.
+
+    Parameters
+    ----------
+    project : pathlib.Path
+        Dossier racine des données (contient le sous-dossier analyses/).
+
+    Returns
+    -------
+    pandas.DataFrame
+        Metadata dédupliquée par échantillon, avec les colonnes sample, group
+        et is_awassi.
+    """
+    metadata_candidates = [
+        project / "analyses/haplotype_heatmap/Awassi_haplo/data/metadata/sample_metadata_387_FST_groups.tsv",
+        project / "analyses/synthese_resultats/nnt/06_NNT_indiv_pairwise_base_metadata/results/metadata_used.tsv",
+    ]
+    for p in metadata_candidates:
         if p.exists():
             meta = pd.read_csv(p, sep="\t")
             print(f"Metadata utilisée : {p}")
@@ -73,17 +88,45 @@ def load_metadata():  # charge la table de metadata des échantillons (premier f
 
     return meta.drop_duplicates("sample")
 
-def get_vcf(chrom):
+def get_vcf(chrom, project):
+    """Trouve le VCF du chromosome demandé sous `project`.
+
+    Parameters
+    ----------
+    chrom : str
+        Nom du chromosome.
+    project : pathlib.Path
+        Dossier racine des données.
+
+    Returns
+    -------
+    pathlib.Path
+        Chemin du premier VCF candidat qui existe.
+    """
     candidates = [
-        PROJECT / f"data/raw data_08_06/awassi_and_basedata_chr{chrom}.vcf.gz",
-        PROJECT / f"data/raw_data_08_06/awassi_and_basedata_chr{chrom}.vcf.gz",
+        project / f"data/raw data_08_06/awassi_and_basedata_chr{chrom}.vcf.gz",
+        project / f"data/raw_data_08_06/awassi_and_basedata_chr{chrom}.vcf.gz",
     ]
     for p in candidates:
         if p.exists():
             return p
     raise FileNotFoundError(f"VCF introuvable pour chr{chrom}")
 
-def get_groups(meta, vcf_samples):  # construit le dictionnaire groupe -> échantillons (Awassi + groupes cibles)
+def get_groups(meta, vcf_samples):
+    """Construit le dictionnaire groupe -> échantillons (Awassi + groupes cibles).
+
+    Parameters
+    ----------
+    meta : pandas.DataFrame
+        Metadata des échantillons (issue de load_metadata).
+    vcf_samples : list[str]
+        Échantillons présents dans le VCF.
+
+    Returns
+    -------
+    dict[str, list[str]]
+        Groupes retenus (au moins 2 individus), restreints aux échantillons du VCF.
+    """
     vcf_set = set(vcf_samples)
     groups = {}
 
@@ -116,6 +159,7 @@ def get_groups(meta, vcf_samples):  # construit le dictionnaire groupe -> échan
     return {g: s for g, s in groups.items() if len(s) >= 2}  # ne garde que les groupes avec au moins 2 individus
 
 def gt_to_alt_count(gt):
+    """Convertit un génotype VCF (ex: "0/1") en nombre de copies de l'allèle alternatif (0, 1 ou 2, NaN si manquant/ambigu)."""
     gt = str(gt).split(":")[0]
 
     if gt in {"./.", ".|.", "."}:
@@ -133,6 +177,22 @@ def gt_to_alt_count(gt):
         return np.nan
 
 def allele_freq_alt(counts, idx):
+    """Fréquence de l'allèle alternatif pour un sous-ensemble d'échantillons.
+
+    Parameters
+    ----------
+    counts : numpy.ndarray
+        Nombre de copies de l'allèle alt par échantillon (voir gt_to_alt_count),
+        NaN si non génotypé.
+    idx : numpy.ndarray
+        Indices des échantillons du groupe dans `counts`.
+
+    Returns
+    -------
+    tuple[float, int]
+        Fréquence alt (NaN si le groupe est vide ou insuffisamment génotypé)
+        et nombre d'échantillons effectivement génotypés.
+    """
     vals = counts[idx]
     vals = vals[~np.isnan(vals)]
 
@@ -147,7 +207,24 @@ def allele_freq_alt(counts, idx):
 
     return vals.sum() / (2 * n_called), n_called  # fréquence alt = somme des comptes / (2 x nb génotypés)
 
-def compute_region(region, meta, outdir):  # calcule dXY (Awassi vs chaque groupe cible) pour une région candidate
+def compute_region(region, meta, outdir, project):
+    """Calcule dXY (Awassi vs chaque groupe cible) pour une région candidate.
+
+    Extrait les SNP bialléliques PASS de la région, calcule dXY par site puis
+    moyenne en fenêtres glissantes (WINDOW/STEP), et écrit les tableaux
+    résultats (par fenêtre, par site, classement) dans `outdir`.
+
+    Parameters
+    ----------
+    region : pandas.Series
+        Une ligne du tableau de régions (region_id, chr, start, end, ...).
+    meta : pandas.DataFrame
+        Metadata des échantillons (issue de load_metadata).
+    outdir : pathlib.Path
+        Dossier de sortie.
+    project : pathlib.Path
+        Dossier racine des données (pour localiser le VCF).
+    """
     region_id = region["region_id"]
     chrom = str(region["chr"])
     start = int(region["start"])
@@ -159,7 +236,7 @@ def compute_region(region, meta, outdir):  # calcule dXY (Awassi vs chaque group
     print(f"chr{chrom}:{start}-{end}")
     print("============================================================")
 
-    vcf = get_vcf(chrom)
+    vcf = get_vcf(chrom, project)
     vcf_samples = run(["bcftools", "query", "-l", str(vcf)]).splitlines()
 
     groups = get_groups(meta, vcf_samples)
@@ -295,24 +372,32 @@ def compute_region(region, meta, outdir):  # calcule dXY (Awassi vs chaque group
     print(f"Ranking bas   : {ranked_path}")
 
 def main():
+    """Point d'entrée CLI : calcule dXY pour toutes les régions d'un tableau donné."""
     ap = argparse.ArgumentParser()
     ap.add_argument("--regions", required=True)
     ap.add_argument("--outdir", required=True)
+    ap.add_argument(
+        "--project",
+        default=os.environ.get("AWASSI_PROJECT_DIR", str(Path.cwd())),
+        help="Dossier racine des données (contient data/ et analyses/). "
+             "Par défaut : variable d'environnement AWASSI_PROJECT_DIR, sinon le répertoire courant.",
+    )
     args = ap.parse_args()
 
     regions = pd.read_csv(args.regions, sep="\t")
     outdir = Path(args.outdir)
     outdir.mkdir(parents=True, exist_ok=True)
+    project = Path(args.project)
 
     required = {"region_id", "chr", "start", "end", "highlight", "title"}
     missing = required - set(regions.columns)
     if missing:
         raise RuntimeError(f"Colonnes manquantes dans régions : {missing}. Colonnes vues : {regions.columns.tolist()}")
 
-    meta = load_metadata()
+    meta = load_metadata(project)
 
     for _, row in regions.iterrows():
-        compute_region(row, meta, outdir)
+        compute_region(row, meta, outdir, project)
 
 if __name__ == "__main__":
     main()

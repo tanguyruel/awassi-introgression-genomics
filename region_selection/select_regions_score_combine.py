@@ -252,6 +252,7 @@ print(f"   Régions strictes après fusion : {len(ms)}")
 
 # ── Comptage SNPs tabix ───────────────────────────────────────────────────────
 def count_snps(chrom, start, end):
+    """Compte les variants d'une région via tabix sur le VCF filtré du chromosome (-1 si le VCF est absent ou l'appel échoue)."""
     vcf = VCF_DIR / f"chr{chrom}.PASS_biallelic_snps.vcf.gz"
     if not vcf.exists():
         return -1  # VCF absent -> comptage impossible
@@ -271,6 +272,7 @@ ms["n_SNPs_region"] = ms.apply(
 ms["priorite"] = ms["n_SNPs_region"].apply(lambda n: "A" if n >= 50 else "B")  # A = signal strict + assez de SNP
 
 def comment_strict(row):
+    """Construit un commentaire descriptif pour une région stricte (SNPs faibles, signal extrême, fusion de plusieurs régions)."""
     parts = []
     if row["n_SNPs_region"] < 50: parts.append("peu de SNPs")  # signale une région pauvre en SNP malgré le filtre strict
     if row["FST_ME"] >= 0.40:     parts.append("FST_ME très élevé")
@@ -319,6 +321,7 @@ print(f"\n→ {tsv_out.name}")
 
 # ── 8. Export HTML ────────────────────────────────────────────────────────────
 def render_html(df):
+    """Rend le tableau final `df` en page HTML autonome (régions classe A/B, commentaires en rouge pour B)."""
     rows_html = []
     for _, row in df.iterrows():
         cells = []

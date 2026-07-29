@@ -110,7 +110,8 @@ CMAP_LD = LinearSegmentedColormap.from_list(
 
 
 def region_safe_name(chrom, start, end):
-    return f"chr{chrom}_{start}_{end}"  # nom sûr (sans espaces/points) pour fichiers et dossiers
+    """Nom sûr (sans espaces/points) pour fichiers et dossiers, ex: "chr3_129220001_129260000"."""
+    return f"chr{chrom}_{start}_{end}"
 
 
 def extract_region_vcf(chrom, start, end, outdir):
@@ -244,6 +245,19 @@ def mb_to_idx(mb_values, pos_mb):
 
 
 def make_figure(reg):
+    """Construit et sauvegarde la figure FST per-SNP + fd + triangle LD pour une région candidate.
+
+    Parameters
+    ----------
+    reg : dict
+        Une entrée de REGIONS (chr, start, end, P3, label, ld_matrix, ld_snps).
+
+    Returns
+    -------
+    tuple[pathlib.Path, pathlib.Path] | None
+        (chemin PNG, chemin PDF) écrits, ou None si la région est ignorée
+        (VCF régional ou matrice LD indisponible).
+    """
     chrom  = reg["chr"]
     start  = reg["start"]
     end    = reg["end"]

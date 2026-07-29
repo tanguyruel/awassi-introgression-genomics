@@ -118,29 +118,35 @@ DISPLAY_LABELS = {
 
 
 def display_label(g):
+    """Libellé d'affichage d'un groupe (DISPLAY_LABELS, ou le nom brut avec "_" remplacés par des espaces)."""
     return DISPLAY_LABELS.get(g, g.replace("_", " "))
 
 
 def group_color(g):
+    """Couleur associée à un groupe (BASE_COLORS, gris par défaut si inconnu)."""
     return BASE_COLORS.get(g, "#999999")
 
 
 def run_cmd(cmd):
+    """Exécute `cmd` et retourne sa sortie standard (texte)."""
     return subprocess.check_output(cmd, text=True)
 
 
 def read_list(path):
+    """Lit un fichier liste (un échantillon par ligne, lignes vides ignorées)."""
     with open(path) as f:
         return [x.strip() for x in f if x.strip()]
 
 
 def safe_name(x):
+    """Nettoie une chaîne en un nom sûr pour fichiers (alphanumériques/._- uniquement, "_" dédupliqués)."""
     x = re.sub(r"[^A-Za-z0-9._-]+", "_", x)
     x = re.sub(r"_+", "_", x)
     return x.strip("_")
 
 
 def parse_gt(gt_field):
+    """Décompose un champ GT VCF en ses deux allèles (float, NaN si manquant/non phasé sur 2 allèles)."""
     gt = gt_field.split(":")[0]
     if gt in ["./.", ".|."]:
         return np.nan, np.nan
@@ -150,6 +156,7 @@ def parse_gt(gt_field):
         return np.nan, np.nan
 
     def conv(x):
+        """Convertit un allèle texte ("0"/"1"/".") en float (NaN si manquant)."""
         if x == ".":
             return np.nan
         return float(int(x))
@@ -158,6 +165,27 @@ def parse_gt(gt_field):
 
 
 def load_haplotypes(vcf, pop_files_dir, groups):
+    """Charge la matrice haplotypes x SNP d'un VCF phasé, restreinte aux individus des groupes demandés.
+
+    Chaque individu diploïde donne 2 haplotypes (h1/h2), déduits des GT phasés.
+
+    Parameters
+    ----------
+    vcf : str
+        Chemin du VCF phasé.
+    pop_files_dir : str
+        Dossier des popmaps (un fichier liste par groupe, "{group}.txt").
+    groups : list[str]
+        Groupes à inclure ; en cas d'individu présent dans plusieurs popmaps,
+        le premier groupe de la liste rencontré est prioritaire.
+
+    Returns
+    -------
+    tuple
+        (H, positions, hap_names, hap_individuals, hap_index, hap_groups,
+        selected_samples, sample_to_group). H est la matrice (n_haplotypes,
+        n_snps) de valeurs 0/1/NaN.
+    """
     vcf_samples = run_cmd(["bcftools", "query", "-l", vcf]).splitlines()
 
     sample_to_group = {}
@@ -221,6 +249,7 @@ def load_haplotypes(vcf, pop_files_dir, groups):
 
 
 def restrict_positions(H, positions, pos_min, pos_max):
+    """Restreint H et positions aux SNP dans [pos_min, pos_max] (bornes incluses, None = pas de borne)."""
     keep = np.ones(len(positions), dtype=bool)
     if pos_min is not None:
         keep &= positions >= pos_min
@@ -230,6 +259,29 @@ def restrict_positions(H, positions, pos_min, pos_max):
 
 
 def filter_snps(H, positions, max_missing, min_maf):
+    """Filtre les SNP sur missingness et fréquence de l'allèle mineur.
+
+    Parameters
+    ----------
+    H : numpy.ndarray
+        Matrice haplotypes x SNP (0/1/NaN).
+    positions : numpy.ndarray
+        Positions (bp) alignées sur les colonnes de H.
+    max_missing : float
+        Fraction maximale de valeurs manquantes tolérée par SNP.
+    min_maf : float
+        Fréquence minimale de l'allèle mineur tolérée par SNP.
+
+    Returns
+    -------
+    tuple[numpy.ndarray, numpy.ndarray]
+        (H, positions) restreints aux SNP retenus.
+
+    Raises
+    ------
+    RuntimeError
+        S'il reste moins de 2 SNP après filtre.
+    """
     keep = []
     for j in range(H.shape[1]):
         col = H[:, j]
@@ -258,12 +310,21 @@ def filter_snps(H, positions, max_missing, min_maf):
 
 
 def allele_string(row):
-    # convertit une ligne d'allèles en chaîne "0/1/N" (N = manquant), sert d'identité exacte
+    """Convertit une ligne d'allèles en chaîne "0"/"1"/"N" (N = manquant), sert d'identité exacte."""
     return "".join("N" if np.isnan(x) else str(int(x)) for x in row)
 
 
 def assign_exact_ids(H):
-    # chaîne d'allèles de chaque haplotype (identité exacte SNP par SNP)
+    """Attribue un identifiant (H001, H002, ...) à chaque séquence d'allèles distincte de H.
+
+    Deux haplotypes ayant exactement la même allele_string reçoivent le même
+    identifiant (identité exacte SNP par SNP, pas de tolérance).
+
+    Returns
+    -------
+    tuple[numpy.ndarray, numpy.ndarray]
+        (exact_ids, allele_strings) pour chaque haplotype (ligne de H).
+    """
     strings = [allele_string(H[i, :]) for i in range(H.shape[0])]
     str_to_id = {}  # associe chaque chaîne unique à un identifiant H001, H002, ...
     exact_ids = []
@@ -275,6 +336,14 @@ def assign_exact_ids(H):
 
 
 def make_tree_order(H):
+    """Clustering hiérarchique (UPGMA, distance de Hamming) des haplotypes de H.
+
+    Returns
+    -------
+    tuple[numpy.ndarray, numpy.ndarray]
+        (Z, order) : matrice de linkage scipy et ordre des feuilles du
+        dendrogramme (indices dans H).
+    """
     X = H.copy()
     X[np.isnan(X)] = 2  # code les valeurs manquantes en 2 (catégorie à part pour la distance)
     D = pdist(X, metric="hamming")  # distance de Hamming entre chaque paire d'haplotypes
@@ -284,13 +353,30 @@ def make_tree_order(H):
 
 
 def matrix_for_plot(H):
+    """Copie H avec les valeurs manquantes recodées à 2, pour un affichage à 3 couleurs (0/1/manquant)."""
     M = H.copy()
     M[np.isnan(M)] = 2  # code le manquant en 2 pour un affichage à 3 couleurs (0/1/manquant)
     return M
 
 
 def compute_r2(H, positions):
-    # H : matrice haplotypes (lignes) x SNP (colonnes), valeurs 0/1/NaN
+    """Calcule le LD (r²) par paire de SNP, à partir de la matrice haplotypes x SNP.
+
+    Le manquant est imputé par la fréquence allélique moyenne du SNP avant
+    corrélation. Les SNP restés sans variance après imputation sont exclus.
+
+    Parameters
+    ----------
+    H : numpy.ndarray
+        Matrice haplotypes (lignes) x SNP (colonnes), valeurs 0/1/NaN.
+    positions : numpy.ndarray
+        Positions (bp) alignées sur les colonnes de H.
+
+    Returns
+    -------
+    tuple[numpy.ndarray, numpy.ndarray]
+        (r2, positions) : matrice carrée de r² entre SNP retenus, et leurs positions.
+    """
     X = H.copy()
     means = np.nanmean(X, axis=0)  # fréquence allélique moyenne de chaque SNP (NaN ignorés)
     inds = np.where(np.isnan(X))
@@ -356,6 +442,22 @@ def annotate_genes(ax_mat, ax_ld, n_rows, n_snps, genes, positions):
 
 
 def draw_ld_down_triangle(ax, r2, positions):
+    """Dessine le triangle LD (r², pointe vers le bas) aligné sur l'axe X en indices SNP de la heatmap.
+
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        Axe cible.
+    r2 : numpy.ndarray
+        Matrice carrée de r² (voir compute_r2).
+    positions : numpy.ndarray
+        Positions (bp) des SNP, pour les ticks de l'axe X.
+
+    Returns
+    -------
+    matplotlib.collections.PolyCollection
+        La collection de polygones tracée (pour construire la colorbar).
+    """
     n = len(positions)
     # palette blanc -> rouge foncé pour représenter r² croissant (0 à 1)
     cmap = LinearSegmentedColormap.from_list(
@@ -397,6 +499,17 @@ def draw_ld_down_triangle(ax, r2, positions):
 
 
 def write_exact_sharing_table(H, haplotypes, individuals, hap_index, groups, out_tsv):
+    """Regroupe les haplotypes par identité exacte et écrit un résumé de partage inter-groupes en TSV.
+
+    Parameters
+    ----------
+    H : numpy.ndarray
+        Matrice haplotypes x SNP.
+    haplotypes, individuals, hap_index, groups : numpy.ndarray
+        Métadonnées alignées sur les lignes de H (voir load_haplotypes).
+    out_tsv : pathlib.Path
+        Chemin de sortie du tableau (une ligne par identifiant d'haplotype exact).
+    """
     exact_ids, allele_strings = assign_exact_ids(H)
     df = pd.DataFrame({
         "exact_haplotype_id": exact_ids, "haplotype": haplotypes,
@@ -423,6 +536,30 @@ def write_exact_sharing_table(H, haplotypes, individuals, hap_index, groups, out
 def plot_combined(region_name, H, positions, haplotypes, individuals, hap_index, groups,
                    group_order, genes, out_png, out_pdf, out_rows, out_sharing, out_snps,
                    out_ld_matrix, out_ld_summary):
+    """Construit et sauvegarde la figure combinée (arbre + heatmap génotypes + triangle LD) d'une région.
+
+    Écrit aussi les tables associées : ordre des lignes, partage
+    d'haplotypes exact, SNP utilisés, matrice LD et résumé LD.
+
+    Parameters
+    ----------
+    region_name : str
+        Libellé de la région (titre de la figure).
+    H : numpy.ndarray
+        Matrice haplotypes x SNP (0/1/NaN), déjà restreinte/filtrée.
+    positions : numpy.ndarray
+        Positions (bp) des SNP, alignées sur les colonnes de H.
+    haplotypes, individuals, hap_index, groups : numpy.ndarray
+        Métadonnées alignées sur les lignes de H (voir load_haplotypes).
+    group_order : list[str]
+        Ordre d'affichage préféré des groupes dans la légende/bande couleur.
+    genes : list[dict]
+        Gènes d'intérêt à annoter (voir REGIONS / annotate_genes).
+    out_png, out_pdf : pathlib.Path
+        Chemins de sortie de la figure.
+    out_rows, out_sharing, out_snps, out_ld_matrix, out_ld_summary : pathlib.Path
+        Chemins de sortie des tables associées.
+    """
     Z, order = make_tree_order(H)
     H_ord = H[order, :]
     M_ord = matrix_for_plot(H_ord)
@@ -586,6 +723,19 @@ def plot_combined(region_name, H, positions, haplotypes, individuals, hap_index,
 
 
 def run_region(reg):
+    """Charge, filtre et trace la heatmap + arbre + LD pour une région candidate (voir REGIONS).
+
+    Parameters
+    ----------
+    reg : dict
+        Une entrée de REGIONS (chr, start, end, P3, label, vcf, genes).
+
+    Returns
+    -------
+    list[pathlib.Path]
+        Fichiers générés (figure PNG/PDF + tables associées), liste vide si
+        le VCF phasé de la région est introuvable.
+    """
     chrom, start, end, p3, label, vcf = reg["chr"], reg["start"], reg["end"], reg["P3"], reg["label"], reg["vcf"]
     genes = reg.get("genes", [])
     print(f"\n{'='*70}\n{label}  |  P3 = {p3}")

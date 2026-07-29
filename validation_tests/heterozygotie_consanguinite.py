@@ -58,6 +58,7 @@ REGIONS = {
 
 
 def load_list(path):
+    """Lit un fichier liste (un échantillon par ligne, lignes vides ignorées)."""
     return [x.strip() for x in open(path) if x.strip()]
 
 
@@ -68,6 +69,7 @@ GROUPS = {**{("zone", z): zone_samples[z] for z in ZONES}, **{("race", r): race_
 
 
 def gt_alt_count(gt):
+    """Convertit un génotype VCF (ex: "0/1") en nombre de copies de l'allèle alternatif (0, 1 ou 2, NaN si manquant/ambigu)."""
     gt = gt.split(":")[0]
     if gt in {"./.", ".|.", "."}:
         return np.nan
@@ -159,7 +161,20 @@ def compute_het_f(vcf_path):
 
 
 def rows_from_results(results, extra=None):
-    # transforme le dict {(kind,name): (F,Ho,n)} en lignes de table prêtes pour un DataFrame
+    """Transforme le dict {(kind, name): (F, Ho, n)} en lignes de table prêtes pour un DataFrame.
+
+    Parameters
+    ----------
+    results : dict[tuple[str, str], tuple[float, float, int]]
+        Sortie de compute_het_f : (kind, name) -> (F, Ho, n_individus_utilisés).
+    extra : dict, optional
+        Colonnes fixes à ajouter à chaque ligne (ex: region_id, P3_best).
+
+    Returns
+    -------
+    list[tuple[str, dict]]
+        Paires (kind, ligne) où kind vaut "zone" ou "race".
+    """
     rows = []
     for (kind, name), (F, Ho, n) in results.items():
         row = {"F": F, "Ho": Ho, "n_individuals_used": n}

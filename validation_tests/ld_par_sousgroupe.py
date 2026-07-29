@@ -65,6 +65,24 @@ REGIONS = [
 
 
 def ld_summary_for_subset(H, positions, mask):
+    """Calcule le LD (r²) et ses statistiques résumées pour un sous-ensemble d'haplotypes.
+
+    Parameters
+    ----------
+    H : numpy.ndarray
+        Matrice haplotypes x SNP de la région.
+    positions : numpy.ndarray
+        Positions (bp) des SNP, alignées sur les colonnes de H.
+    mask : numpy.ndarray
+        Masque booléen des haplotypes du sous-groupe à analyser.
+
+    Returns
+    -------
+    dict | None
+        n_haplotypes, n_snps_used, mean_r2, median_r2, prop_r2_ge_0.5,
+        prop_r2_ge_0.8 ; None si le sous-groupe est trop petit ou n'a pas
+        assez de SNP après filtre qualité.
+    """
     Hs = H[mask, :]
     if Hs.shape[0] < 4:
         return None  # trop peu d'haplotypes pour un LD fiable
@@ -86,6 +104,18 @@ def ld_summary_for_subset(H, positions, mask):
 
 
 def compute_region(reg):
+    """Calcule le LD par sous-groupe (Awassi seul, P3 seul, ME seul, combiné) pour une région candidate.
+
+    Parameters
+    ----------
+    reg : dict
+        Une entrée de REGIONS (region_id, chr, start, end, P3, vcf).
+
+    Returns
+    -------
+    list[dict]
+        Une ligne par sous-groupe évalué (voir ld_summary_for_subset).
+    """
     region_id, chrom, start, end, p3, vcf = (
         reg["region_id"], reg["chr"], reg["start"], reg["end"], reg["P3"], reg["vcf"]
     )

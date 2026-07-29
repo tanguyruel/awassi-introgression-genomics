@@ -83,12 +83,13 @@ REGIONS = [
 
 
 def read_list(path):
+    """Lit un fichier liste (un échantillon par ligne, lignes vides ignorées)."""
     with open(path) as f:
         return [x.strip() for x in f if x.strip()]
 
 
-# Convertit un génotype texte (0/0, 0/1, 1/1, ./.) en nombre d'allèles alternatifs (0, 1, 2 ou NaN)
 def gt_to_alt_count(gt):
+    """Convertit un génotype texte (0/0, 0/1, 1/1, ./.) en nombre d'allèles alternatifs (0, 1, 2 ou NaN)."""
     gt = gt.split(":")[0]  # ne garde que le champ GT (au cas où d'autres champs FORMAT sont présents)
     if gt in {"./.", ".|.", "."}:
         return np.nan
@@ -113,8 +114,8 @@ def pi_site_value(vals):
     return (two_n / (two_n - 1)) * 2 * p * (1 - p)  # pi du site, correction petit-échantillon (2n/(2n-1))
 
 
-# Attribue un niveau de fiabilité à une fenêtre selon le nombre de SNPs utilisés
 def quality_flag(n_snps):
+    """Attribue un niveau de fiabilité à une fenêtre selon le nombre de SNPs utilisés."""
     if n_snps < N_SNPS_NA:
         return "NA_too_few_snps"
     if n_snps < N_SNPS_RELIABLE:
@@ -122,8 +123,23 @@ def quality_flag(n_snps):
     return "reliable"
 
 
-# Calcule pi en fenêtres glissantes (20kb/pas 5kb), pour les 7 groupes, sur une région candidate
 def compute_region(reg):
+    """Calcule pi en fenêtres glissantes (20kb/pas 5kb), pour les 7 groupes, sur une région candidate.
+
+    Applique les filtres QC du module (missingness globale par site,
+    couverture minimale par groupe) puis agrège par fenêtre avec un
+    quality_flag (voir quality_flag).
+
+    Parameters
+    ----------
+    reg : dict
+        Une entrée de REGIONS (region_id, chr, start, end, P3_best).
+
+    Returns
+    -------
+    list[dict]
+        Une ligne par fenêtre x groupe.
+    """
     region_id, chrom, start, end = reg["region_id"], reg["chr"], reg["start"], reg["end"]
     vcf = str(VCF_DIR / f"awassi_and_basedata_chr{chrom}.vcf.gz")
     print(f"\n{'='*70}\n{region_id} | chr{chrom}:{start}-{end}")
@@ -215,8 +231,8 @@ def compute_region(reg):
     return rows
 
 
-# Trace la courbe pi en fonction de la position pour les 7 groupes d'une région, sauvegarde PNG+PDF
 def make_region_plot(df_region, region_id, p3, out_png, out_pdf):
+    """Trace la courbe pi en fonction de la position pour les 7 groupes d'une région, sauvegarde PNG+PDF."""
     fig, ax = plt.subplots(figsize=(10, 6.5))
 
     for g in GROUPS:

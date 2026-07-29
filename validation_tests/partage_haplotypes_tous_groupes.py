@@ -22,14 +22,24 @@ Sortie : analyses/synthese_resultats/haplotype_sharing_all_groups/
 
 Pas cité directement dans l'Annexe A (le résultat rapporté vient du bootstrap_specificite_haplotypique.py), mais
 requis pour l'exécuter : 65 (et 69) importent ce fichier par nom de module, il doit
-rester dans le même dossier. Chemin PROJ ci-dessous en dur, à adapter si le dépôt est
-cloné ailleurs. Usage : python3 64_haplotype_sharing_all_groups_v1.py
+rester dans le même dossier. Usage : python3 64_haplotype_sharing_all_groups_v1.py [--project <dossier>]
+
+Le dossier racine des données (hors dépôt, contient analyses/) se règle via --project
+en exécution directe ; en import dynamique (par bootstrap_specificite_haplotypique.py et
+ccdc91_retest_pic.py), il est lu depuis la variable d'environnement AWASSI_PROJECT_DIR
+(sinon le répertoire courant) au moment de l'import.
 """
+import argparse
 import subprocess, csv, sys
+import os
 from pathlib import Path
 import numpy as np
 
-PROJ = Path("/home/tanguyruel/Bureau/genome_complet_Awassi")  # chemin en dur à adapter
+def _default_project():
+    """Dossier racine des données par défaut : $AWASSI_PROJECT_DIR, sinon le répertoire courant."""
+    return Path(os.environ.get("AWASSI_PROJECT_DIR", str(Path.cwd())))
+
+PROJ = _default_project()
 POP = PROJ / "analyses/fst/popmaps_separees_v1"  # dossier des popmaps (listes d'individus par groupe)
 PHASE = PROJ / "analyses/phasing_beagle"
 OUT = PROJ / "analyses/synthese_resultats/haplotype_sharing_all_groups"
@@ -55,7 +65,7 @@ REGIONS = [  # (id région, chemin VCF relatif, chr, start, end, P3 retenu) — 
 
 
 def load_pop():
-    # construit {groupe: set des noms d'échantillons} depuis les fichiers popmap
+    """Construit {groupe: set des noms d'échantillons} depuis les fichiers popmap sous POP."""
     return {g: {l.split()[0] for l in (POP / f"{g}.txt").read_text().split("\n") if l.strip()}
             for g in GROUPS}
 
@@ -83,6 +93,18 @@ def read_haplotypes(vcf, chrom, start, end):
 
 
 def filter_snps(H):
+    """Filtre les SNP sur missingness (MAX_MISSING) et fréquence allélique mineure (MIN_MAF).
+
+    Parameters
+    ----------
+    H : numpy.ndarray
+        Matrice haplotypes x SNP, valeurs 0/1/-1 (-1 = manquant).
+
+    Returns
+    -------
+    tuple[numpy.ndarray, int]
+        Matrice filtrée et nombre de SNP retenus.
+    """
     valid = H >= 0  # True si l'allèle n'est pas manquant (-1)
     miss = 1 - valid.mean(axis=0)  # proportion de valeurs manquantes par SNP
     keep = miss <= MAX_MISSING
@@ -109,6 +131,23 @@ def mismatch_matrix(A, B):
 
 
 def main():
+    """Point d'entrée CLI : calcule le partage d'haplotypes Awassi/groupe pour chaque région de REGIONS."""
+    global PROJ, POP, PHASE, OUT
+
+    ap = argparse.ArgumentParser()
+    ap.add_argument(
+        "--project",
+        default=str(PROJ),
+        help="Dossier racine des données (contient analyses/). "
+             "Par défaut : variable d'environnement AWASSI_PROJECT_DIR, sinon le répertoire courant.",
+    )
+    args = ap.parse_args()
+
+    PROJ = Path(args.project)
+    POP = PROJ / "analyses/fst/popmaps_separees_v1"
+    PHASE = PROJ / "analyses/phasing_beagle"
+    OUT = PROJ / "analyses/synthese_resultats/haplotype_sharing_all_groups"
+
     OUT.mkdir(parents=True, exist_ok=True)
     pop = load_pop()
     rng = np.random.default_rng(12345)  # générateur aléatoire reproductible (graine fixe)

@@ -28,27 +28,37 @@ rapport de stage) — remplace le script "64" (Monte-Carlo, ici partage_haplotyp
 pour le résultat rapporté, mais l'importe encore pour les données de partage : IMPORTANT,
 partage_haplotypes_tous_groupes.py doit rester présent dans le même dossier (import dynamique
 par chemin de fichier, voir plus bas).
-Usage : python3 bootstrap_specificite_haplotypique.py
-Chemin PROJ ci-dessous en dur (machine d'origine) — à adapter si relancé ailleurs (sert
-uniquement à localiser les résultats déjà calculés, hors de ce dépôt).
+Usage : python3 bootstrap_specificite_haplotypique.py [--project <dossier>]
+
+Le dossier racine des données (sert uniquement à localiser les résultats déjà calculés,
+hors de ce dépôt) se règle via --project, sinon la variable d'environnement
+AWASSI_PROJECT_DIR, sinon le répertoire courant.
 """
+import argparse
 import csv
 import importlib.util
+import os
 from math import comb
 from pathlib import Path
 import numpy as np
 
-PROJ = Path("/home/tanguyruel/Bureau/genome_complet_Awassi")  # chemin en dur à adapter (dossier de travail, hors dépôt)
-
-# Import dynamique de partage_haplotypes_tous_groupes.py (même dossier que ce script),
-# pour réutiliser ses fonctions et données (load_pop, read_haplotypes, filter_snps,
-# mismatch_matrix, REGIONS, GROUPS, PHASE) sans dupliquer le code
 SCRIPT_PARTAGE = Path(__file__).with_name("partage_haplotypes_tous_groupes.py")
-spec = importlib.util.spec_from_file_location("partage_haplotypes", SCRIPT_PARTAGE)
-m64 = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(m64)  # exécute le script -> ses fonctions/variables deviennent accessibles via m64.xxx
 
-OUT = PROJ / "analyses/synthese_resultats/haplotype_sharing_all_groups"  # dossier de sortie (partagé avec partage_haplotypes_tous_groupes.py)
+
+def _load_partage_module():
+    """Importe dynamiquement partage_haplotypes_tous_groupes.py (même dossier que ce script).
+
+    Réutilise ainsi ses fonctions et données (load_pop, read_haplotypes,
+    filter_snps, mismatch_matrix, REGIONS, GROUPS, PHASE) sans dupliquer le
+    code. Doit être appelée après avoir positionné la variable d'environnement
+    AWASSI_PROJECT_DIR, dont ce module dépend pour localiser ses propres données.
+    """
+    spec = importlib.util.spec_from_file_location("partage_haplotypes", SCRIPT_PARTAGE)
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    return m
+
+
 K, N_BOOT, THRESH = 16, 2000, 0.01  # taille de tirage (raréfaction), nb de bootstraps, seuil "jumeau" (<1% de sites différents)
 CANDIDATES = ["Africa", "Asia", "Europe", "America", "Australia"]  # groupes P3 candidats testés (ME exclu)
 
@@ -65,6 +75,20 @@ def p_at_least_one(n, m, k):
 
 
 def main():
+    """Point d'entrée CLI : bootstrap de spécificité haplotypique du P3 pour chaque région de REGIONS."""
+    ap = argparse.ArgumentParser()
+    ap.add_argument(
+        "--project",
+        default=os.environ.get("AWASSI_PROJECT_DIR", str(Path.cwd())),
+        help="Dossier racine des données (contient analyses/). "
+             "Par défaut : variable d'environnement AWASSI_PROJECT_DIR, sinon le répertoire courant.",
+    )
+    args = ap.parse_args()
+
+    os.environ["AWASSI_PROJECT_DIR"] = args.project  # lu par partage_haplotypes_tous_groupes.py au chargement
+    m64 = _load_partage_module()
+    out_dir = Path(args.project) / "analyses/synthese_resultats/haplotype_sharing_all_groups"
+
     pop = m64.load_pop()  # groupes -> ensembles d'échantillons (fonction de partage_haplotypes_tous_groupes.py)
     rng = np.random.default_rng(7)  # générateur aléatoire reproductible (graine fixe) pour le bootstrap
     rows = []
@@ -121,7 +145,7 @@ def main():
         print(f"{rid:28s} P3={p3best:10s} score_P3={score[p3best]:5.1f}  meilleur={best_obs:10s} "
               f"marge={rows[-1]['margin_P3_vs_best_other']:+6.1f} [{lo:+.1f};{hi:+.1f}]  P(P3 best)={wins/N_BOOT:.2f}")
 
-    f = OUT / "Haplotype_specificity_bootstrap.tsv"
+    f = out_dir / "Haplotype_specificity_bootstrap.tsv"
     with open(f, "w", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=list(rows[0].keys()), delimiter="\t")
         w.writeheader(); w.writerows(rows)

@@ -60,12 +60,13 @@ REGIONS = [
 
 
 def read_list(path):
+    """Lit un fichier liste (un échantillon par ligne, lignes vides ignorées)."""
     with open(path) as f:
         return [x.strip() for x in f if x.strip()]
 
 
-# Extrait la liste des échantillons appartenant à `group` depuis un popmap générique (colonnes échantillon/groupe)
 def read_group_from_popmap(path, group):
+    """Extrait la liste des échantillons appartenant à `group` depuis un popmap générique (colonnes échantillon/groupe)."""
     samples = []
     with open(path) as f:
         f.readline()
@@ -87,8 +88,8 @@ def read_group(group):
     return read_group_from_popmap(POPMAP_MAIN, group)
 
 
-# Calcule la fréquence de l'allèle alternatif pour un sous-ensemble d'échantillons à un site donné
 def alt_freq(gts, idxs):
+    """Fréquence de l'allèle alternatif pour un sous-ensemble d'échantillons à un site donné (None si aucun génotype exploitable)."""
     alt = 0
     n = 0
     for i in idxs:
@@ -106,8 +107,8 @@ def alt_freq(gts, idxs):
     return None if n == 0 else alt / n
 
 
-# Récupère l'ordre des échantillons tel qu'il apparaît dans le VCF restreint au fichier d'échantillons
 def get_sample_order(vcf, sample_file):
+    """Récupère l'ordre des échantillons tel qu'il apparaît dans le VCF restreint au fichier d'échantillons."""
     p1 = subprocess.Popen(["bcftools", "view", "-S", str(sample_file), "-Ou", vcf], stdout=subprocess.PIPE)
     p2 = subprocess.run(["bcftools", "query", "-l"], stdin=p1.stdout, stdout=subprocess.PIPE, text=True, check=True)
     p1.stdout.close()
@@ -115,8 +116,23 @@ def get_sample_order(vcf, sample_file):
     return p2.stdout.strip().splitlines()
 
 
-# Calcule SE (erreur-type) et Z-score du D-stat par block-jackknife delete-one-block
 def jackknife(num, den, blocks):
+    """Calcule SE (erreur-type) et Z-score du D-stat par block-jackknife delete-one-block.
+
+    Parameters
+    ----------
+    num, den : float
+        Numérateur et dénominateur du D-stat cumulés sur toute la fenêtre.
+    blocks : dict[int, list]
+        Par identifiant de bloc jackknife, [num, den, n_snps] accumulés sur ce bloc.
+
+    Returns
+    -------
+    tuple[float | None, float | None, int]
+        (SE, Z, nombre de blocs utilisés). SE et Z valent None si le
+        dénominateur global est nul ou s'il n'y a pas assez de blocs
+        (< MIN_BLOCKS) pour un jackknife fiable.
+    """
     if den == 0:
         return None, None, 0
     D = num / den  # D-statistic global = (ABBA-BABA)/(ABBA+BABA)
@@ -136,8 +152,20 @@ def jackknife(num, den, blocks):
     return SE, Z, B
 
 
-# Calcule le D-stat + jackknife pour une région donnée (fenêtre 150kb autour du centre de la région stricte)
 def run_region(reg):
+    """Calcule le D-stat + jackknife pour une région (fenêtre 150kb centrée sur le milieu de la région stricte).
+
+    Parameters
+    ----------
+    reg : dict
+        Une entrée de REGIONS (region_id, chr, strict_start, strict_end, P3).
+
+    Returns
+    -------
+    dict | None
+        Ligne de résultats (D, SE, Z, ABBA, BABA, n_snps, n_blocks, ...), ou
+        None si trop peu de SNPs utilisables dans la fenêtre.
+    """
     region_id, chrom, strict_start, strict_end, P3 = (
         reg["region_id"], reg["chr"], reg["strict_start"], reg["strict_end"], reg["P3"]
     )

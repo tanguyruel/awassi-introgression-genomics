@@ -63,6 +63,13 @@ CHR_COLORS = ["#3b5b92", "#8faadc"]
 
 
 def load_data():
+    """Charge les tables FST et fd genome-wide déjà classées (voir BASE).
+
+    Returns
+    -------
+    tuple[pandas.DataFrame, pandas.DataFrame]
+        (fst, fd), une ligne par fenêtre 20kb/step5kb.
+    """
     fst = pd.read_csv(BASE / "FST_all_windows_ranked_genomewide.tsv", sep="\t",
                        usecols=["chr", "start", "end", "FST_ME", "FST_score", "FST_closest_group", "rank_FST"])
     fd = pd.read_csv(BASE / "fd_all_windows_ranked_genomewide.tsv", sep="\t",
@@ -89,6 +96,7 @@ def build_chrom_offsets(fst, fd):
 
 
 def add_cum_pos(df, offsets):
+    """Ajoute une colonne cum_pos (position cumulée genome-wide) à partir des offsets par chromosome."""
     df = df.copy()
     df["cum_pos"] = df["chr"].map(offsets) + (df["start"] + df["end"]) / 2  # position cumulée = offset + milieu de fenêtre
     return df
@@ -118,6 +126,23 @@ def load_genes_by_chr():
 
 
 def best_gene(genes_by_chr, chrom, start, end):
+    """Choisit le meilleur libellé de gène pour une région.
+
+    Priorité : un gène nommé (pas un LOC générique) situé dans la région,
+    sinon un LOC dans la région, sinon le gène le plus proche dans la marge
+    FLANK (marqué "(flanc)"), sinon "(désert génique)".
+
+    Parameters
+    ----------
+    genes_by_chr : dict[str, list[tuple[int, int, str]]]
+        Gènes (start, end, name) par chromosome (issu de load_genes_by_chr).
+    chrom, start, end : le chromosome et les bornes de la région.
+
+    Returns
+    -------
+    str
+        Libellé de gène à afficher.
+    """
     chrom = str(chrom)
     # gènes situés dans la région ou dans la marge FLANK autour (candidats)
     hits = [g for g in genes_by_chr.get(chrom, []) if g[1] >= start - FLANK and g[0] <= end + FLANK]
@@ -168,6 +193,7 @@ def fuse_intersection(fst, fd, inter_keys):
 
 
 def main():
+    """Construit le Manhattan plot FST/fd genome-wide et exporte les régions de l'intersection top-K."""
     print("Chargement des tables genome-wide (déjà construites en amont)...")
     fst, fd = load_data()
     print(f"  FST : {len(fst):,} fenêtres")
@@ -236,6 +262,7 @@ def main():
     reg_keys_strict = set(zip(reg[reg["strict"]]["chr"], reg[reg["strict"]]["start"], reg[reg["strict"]]["end"]))
 
     def in_strict_region(row):
+        """True si la fenêtre `row` est entièrement contenue dans une région stricte fusionnée."""
         return any(row["chr"] == c and s <= row["start"] and row["end"] <= e for c, s, e in reg_keys_strict)
 
     hi_fst = fst[fst["is_top_both"]].copy()

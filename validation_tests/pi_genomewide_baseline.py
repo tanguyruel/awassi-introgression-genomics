@@ -68,8 +68,8 @@ for c, s, e in CANDIDATE_REGIONS:
     EXCLUDE_BY_CHROM[c].append((s - EXCLUDE_MARGIN, e + EXCLUDE_MARGIN))
 
 
-# Teste si l'intervalle [start, end] chevauche une zone exclue (région candidate + marge) du chromosome
 def overlaps_excluded(chrom, start, end):
+    """True si [start, end] chevauche une zone exclue (région candidate + marge) du chromosome `chrom`."""
     for es, ee in EXCLUDE_BY_CHROM.get(chrom, []):
         if start <= ee and es <= end:
             return True
@@ -121,8 +121,8 @@ groups_samples = {g: [x.strip() for x in open(POP_DIR / f"{g}.txt") if x.strip()
 all_samples = sorted(set().union(*groups_samples.values()))
 
 
-# Convertit un génotype texte en nombre d'allèles alternatifs (0, 1, 2 ou NaN si manquant)
 def gt_to_alt_count(gt):
+    """Convertit un génotype texte en nombre d'allèles alternatifs (0, 1, 2 ou NaN si manquant)."""
     gt = gt.split(":")[0]  # ne garde que le champ GT
     if gt in {"./.", ".|.", "."}:
         return np.nan
@@ -136,8 +136,8 @@ def gt_to_alt_count(gt):
         return np.nan
 
 
-# Estimateur non biaisé de pi pour un site, restreint aux individus d'un groupe (idx)
 def pi_site(alt_counts, idx):
+    """Estimateur non biaisé de pi pour un site, restreint aux individus d'un groupe (idx). NaN si < 2 génotypés."""
     vals = alt_counts[idx]
     vals = vals[~np.isnan(vals)]
     n_called = len(vals)

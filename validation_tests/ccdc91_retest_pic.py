@@ -40,30 +40,37 @@ Script de référence pour "CCDC91 — reprise sur le cœur du pic" (§3.6, appe
 méthode générique réutilisable telle quelle pour d'autres régions.
 IMPORTANT : importe partage_haplotypes_tous_groupes.py (import dynamique par chemin de
 fichier, voir plus bas) — ce fichier doit rester présent dans le même dossier.
-Chemin PROJ ci-dessous en dur, à adapter si relancé ailleurs (sert uniquement à localiser
-le VCF déjà phasé, hors de ce dépôt).
-Usage : python3 ccdc91_retest_pic.py
+Usage : python3 ccdc91_retest_pic.py [--project <dossier>]
+
+Le dossier racine des données (sert uniquement à localiser le VCF déjà phasé, hors de
+ce dépôt) se règle via --project, sinon la variable d'environnement AWASSI_PROJECT_DIR,
+sinon le répertoire courant.
 """
 
+import argparse
 import importlib.util
+import os
 from math import comb
 from pathlib import Path
 
 import numpy as np
 
-PROJ = Path("/home/tanguyruel/Bureau/genome_complet_Awassi")  # chemin en dur à adapter (dossier de travail, hors dépôt)
-
-# Import dynamique de partage_haplotypes_tous_groupes.py (même dossier que ce
-# script), pour réutiliser ses fonctions (load_pop, read_haplotypes, filter_snps,
-# mismatch_matrix) sans dupliquer le code
 SCRIPT_PARTAGE = Path(__file__).with_name("partage_haplotypes_tous_groupes.py")
-spec = importlib.util.spec_from_file_location("partage_haplotypes", SCRIPT_PARTAGE)
-m64 = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(m64)  # exécute le script -> ses fonctions deviennent accessibles via m64.xxx
 
-VCF = (PROJ / "analyses/phasing_beagle/Phasing_Beagle_v1_5regions/phased/"
-       "chr3_186.07_186.12Mb.beagle_phased.vcf.gz")  # VCF phasé de la région CCDC91
-OUT = PROJ / "analyses/synthese_resultats/CCDC91_peak_core_retest.tsv"
+
+def _load_partage_module():
+    """Importe dynamiquement partage_haplotypes_tous_groupes.py (même dossier que ce script).
+
+    Réutilise ainsi ses fonctions (load_pop, read_haplotypes, filter_snps,
+    mismatch_matrix) sans dupliquer le code. Doit être appelée après avoir
+    positionné la variable d'environnement AWASSI_PROJECT_DIR, dont ce module
+    dépend pour localiser ses propres données.
+    """
+    spec = importlib.util.spec_from_file_location("partage_haplotypes", SCRIPT_PARTAGE)
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    return m
+
 
 K, N_BOOT, THRESH = 16, 2000, 0.01  # taille de tirage (raréfaction), nb de bootstraps, seuil "jumeau"
 CANDIDATES = ["Africa", "Asia", "Europe", "America", "Australia"]  # groupes P3 candidats testés
@@ -98,11 +105,29 @@ def rarefied_score(D_by_group, group, k=K):
 
 
 def main():
+    """Point d'entrée CLI : rejoue le test de partage haplotypique CCDC91 sur les 3 fenêtres emboîtées."""
+    ap = argparse.ArgumentParser()
+    ap.add_argument(
+        "--project",
+        default=os.environ.get("AWASSI_PROJECT_DIR", str(Path.cwd())),
+        help="Dossier racine des données (contient analyses/). "
+             "Par défaut : variable d'environnement AWASSI_PROJECT_DIR, sinon le répertoire courant.",
+    )
+    args = ap.parse_args()
+
+    os.environ["AWASSI_PROJECT_DIR"] = args.project  # lu par partage_haplotypes_tous_groupes.py au chargement
+    m64 = _load_partage_module()
+
+    project = Path(args.project)
+    vcf = (project / "analyses/phasing_beagle/Phasing_Beagle_v1_5regions/phased/"
+           "chr3_186.07_186.12Mb.beagle_phased.vcf.gz")  # VCF phasé de la région CCDC91
+    out = project / "analyses/synthese_resultats/CCDC91_peak_core_retest.tsv"
+
     pops = m64.load_pop()  # groupes -> ensembles d'échantillons (fonction de partage_haplotypes_tous_groupes.py)
     rows = []
 
     for tag, start, end, note in WINDOWS:
-        H, samples = m64.read_haplotypes(VCF, "3", start, end)  # charge la matrice haplotypes x SNP de la fenêtre (fonction de partage_haplotypes_tous_groupes.py)
+        H, samples = m64.read_haplotypes(vcf, "3", start, end)  # charge la matrice haplotypes x SNP de la fenêtre (fonction de partage_haplotypes_tous_groupes.py)
         H, n_snps = m64.filter_snps(H)  # filtre qualité des SNP (fonction de partage_haplotypes_tous_groupes.py)
 
         # index des haplotypes par groupe (2 haplotypes par individu)
@@ -148,12 +173,12 @@ def main():
                      f"{scores[best_other]:.2f}", f"{marge:+.2f}",
                      f"[{lo:+.2f} ; {hi:+.2f}]", verdict])
 
-    with open(OUT, "w", encoding="utf-8") as fh:
+    with open(out, "w", encoding="utf-8") as fh:
         fh.write("fenetre\tcoordonnees\tn_snps\tscore_Asia\tmeilleur_autre\t"
                  "score_meilleur_autre\tmarge\tIC95\tverdict\n")
         for r in rows:
             fh.write("\t".join(r) + "\n")
-    print(f"\nÉcrit : {OUT}")
+    print(f"\nÉcrit : {out}")
 
 
 if __name__ == "__main__":
