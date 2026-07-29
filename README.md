@@ -140,8 +140,7 @@ correspondance.
 
 Les VCF bruts et les résultats intermédiaires volumineux ne sont pas inclus (taille, et
 données génétiques dont la redistribution n'est pas garantie). Les tables de résultats
-filtrées citées dans le rapport (régions candidates, métriques par test) sont disponibles
-sur demande auprès de l'auteur.
+filtrées citées dans le rapport (régions candidates, métriques par test) sont disponibles sur demande.
 
 ## Citation
 
