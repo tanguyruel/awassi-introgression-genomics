@@ -5,11 +5,16 @@
 # Entrée : $VCF_LIST, $METADATA_VCF_ORDER (config_project.sh).
 # Sortie : analyses/pca/PCA_<date>/ (VCF filtré, PLINK, plots via 02_plot_pca_25chr.R).
 # Usage  : ./01_run_pca_25chr_filtered.sh
+#
+# IMPORTANT : chemin absolu en dur ligne ci-dessous, à adapter si le dépôt est cloné
+# ailleurs. Dépend aussi de config_project.sh et scripts/01_pca/02_plot_pca_25chr.R,
+# tous deux du dépôt de travail interne et NON inclus ici (script fourni à titre de
+# référence de méthode, pas exécutable tel quel sans ces deux fichiers).
 
 set -euo pipefail
 
-cd ~/Bureau/genome_complet_Awassi
-source config_project.sh  # charge les variables de configuration (VCF_LIST, PROJECT_DIR, etc.)
+cd ~/Bureau/genome_complet_Awassi  # chemin en dur à adapter
+source config_project.sh  # charge les variables de configuration (VCF_LIST, PROJECT_DIR, etc.) — fichier non fourni, voir note ci-dessus
 
 RUN_DATE=$(date +%d_%m_%Hh%M)
 D_RUN="$PROJECT_DIR/analyses/pca/PCA_${RUN_DATE}"

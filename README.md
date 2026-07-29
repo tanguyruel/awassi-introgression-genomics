@@ -128,8 +128,18 @@ correspondance.
 ## À savoir avant de relancer un script
 
 - Tous les scripts supposent d'être lancés depuis la racine de ce dépôt.
-- Plusieurs scripts ont un chemin absolu en dur vers la machine d'origine (`/home/tanguyruel/...`),
-  repéré par un commentaire `# chemin en dur à adapter` — à corriger avant toute exécution.
+- Les scripts Python de `region_selection/` et `validation_tests/` qui ont besoin du
+  dossier de données externe (`data/`, `analyses/`, hors dépôt) le prennent via
+  `--project <dossier>`, sinon la variable d'environnement `AWASSI_PROJECT_DIR`, sinon
+  le répertoire courant — plus de chemin en dur à éditer dans le code pour ceux-là.
+- Les scripts shell (`pca.sh`, `admixture.sh`, `fst_local_genomewide.sh`,
+  `phasing_beagle.sh`) ont encore un chemin absolu en dur vers la machine d'origine
+  (repéré par un commentaire `# chemin en dur à adapter`) — à corriger avant toute
+  exécution.
+- `pca.sh` s'appuie en plus sur un `config_project.sh` (variables `PROJECT_DIR`,
+  `VCF_LIST`, `METADATA_VCF_ORDER`) et un script R (`scripts/01_pca/02_plot_pca_25chr.R`)
+  du dépôt de travail interne, non inclus ici : script fourni à titre de référence de
+  méthode, pas exécutable tel quel sans ces deux fichiers.
 - `bootstrap_specificite_haplotypique.py` et `ccdc91_retest_pic.py` importent
   `partage_haplotypes_tous_groupes.py` par chemin de fichier : les trois doivent rester
   dans le même dossier `validation_tests/`.

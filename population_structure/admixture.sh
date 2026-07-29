@@ -6,8 +6,9 @@
 # IMPORTANT : nécessite le binaire ADMIXTURE (Alexander et al. 2009), pas fourni
 # dans ce dépôt. À télécharger depuis https://dalexander.github.io/admixture/
 # puis adapter la variable ADMIXTURE ci-dessous vers l'exécutable téléchargé.
+# Chemin absolu en dur ligne ci-dessous (cd), à adapter si le dépôt est cloné ailleurs.
 set -euo pipefail
-cd ~/Bureau/genome_complet_Awassi/analyses/admixture_v2
+cd ~/Bureau/genome_complet_Awassi/analyses/admixture_v2  # chemin en dur à adapter
 
 ADMIXTURE=/home/tanguyruel/Bureau/3718_SNP_Awassi/test_3718SNPs/software/admixture_linux-1.4.0/admixture  # chemin local à adapter (voir note ci-dessus)
 BED="genomewide_pruned.bed"
