@@ -1,5 +1,7 @@
 <p align="center">
-  <img src="assets/logo_leca.png" alt="Logo LECA" width="220">
+  <img src="assets/logo_leca.png" alt="Logo LECA" height="90">
+  &nbsp;&nbsp;&nbsp;
+  <img src="assets/logo_cnrs.png" alt="Logo CNRS" height="90">
 </p>
 
 <h1 align="center">Awassi Introgression Genomics</h1>
@@ -16,8 +18,9 @@ mouton Awassi — signaux locaux d'introgression et validation multi-critères �
 affinité locale anormale avec un autre groupe géographique (Afrique, Asie, Europe, Amérique,
 Océanie), signal compatible avec une introgression ancienne.
 
-*Logo LECA (Laboratoire d'Écologie Alpine, UMR CNRS/UGA/USMB 5553) reproduit à titre
-d'affiliation ; propriété de l'institution, non couvert par la licence MIT de ce dépôt.*
+*Logos LECA (Laboratoire d'Écologie Alpine, UMR CNRS/UGA/USMB 5553) et CNRS (Centre National
+de la Recherche Scientifique, tutelle du LECA) reproduits à titre d'affiliation ; propriété
+de leurs institutions respectives, non couverts par la licence MIT de ce dépôt.*
 
 ## En bref, la génétique pour les nuls
 
@@ -151,6 +154,14 @@ correspondance.
 Les VCF bruts et les résultats intermédiaires volumineux ne sont pas inclus (taille, et
 données génétiques dont la redistribution n'est pas garantie). Les tables de résultats
 filtrées citées dans le rapport (régions candidates, métriques par test) sont disponibles sur demande.
+
+### Jeu de test synthétique
+
+[`example_data/`](example_data/) contient un petit jeu de données **entièrement synthétique**
+(VCF + metadata, format identique aux données réelles) avec un signal d'introgression connu
+et contrôlé, pour pouvoir essayer `fd_genomewide.py` et `dxy.py` sans les données du stage.
+Voir [`example_data/README.md`](example_data/README.md) pour le détail du modèle de
+simulation et les résultats obtenus.
 
 ## Remerciements
 
