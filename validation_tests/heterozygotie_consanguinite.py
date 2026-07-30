@@ -30,10 +30,14 @@ Usage : python3 56_het_inbreeding_v1.py
 """
 
 import subprocess
+import sys
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # racine du dépôt, pour importer _shared
+from _shared import read_list as load_list, gt_to_alt_count as gt_alt_count
 
 BASE = Path("analyses/synthese_resultats")
 GENOMEWIDE_VCF = BASE / "pi_genomewide_baseline" / "sampled_windows_merged.vcf.gz"  # échantillon de fond (pi_genomewide_baseline.py)
@@ -57,30 +61,10 @@ REGIONS = {
 }
 
 
-def load_list(path):
-    """Lit un fichier liste (un échantillon par ligne, lignes vides ignorées)."""
-    return [x.strip() for x in open(path) if x.strip()]
-
-
 zone_samples = {z: load_list(ZONE_POP_DIR / f"{z}.txt") for z in ZONES}
 race_samples = {r: load_list(RACE_DIR / f"{r}.txt") for r in RACES}
 # GROUPS réunit zones et races dans un seul dict, clé = (type, nom) -> tous les groupes traités pareil
 GROUPS = {**{("zone", z): zone_samples[z] for z in ZONES}, **{("race", r): race_samples[r] for r in RACES}}
-
-
-def gt_alt_count(gt):
-    """Convertit un génotype VCF (ex: "0/1") en nombre de copies de l'allèle alternatif (0, 1 ou 2, NaN si manquant/ambigu)."""
-    gt = gt.split(":")[0]
-    if gt in {"./.", ".|.", "."}:
-        return np.nan
-    sep = "|" if "|" in gt else "/"
-    parts = gt.split(sep)
-    if len(parts) != 2 or "." in parts:
-        return np.nan
-    try:
-        return int(parts[0]) + int(parts[1])
-    except ValueError:
-        return np.nan
 
 
 def compute_het_f(vcf_path):

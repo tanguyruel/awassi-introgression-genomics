@@ -24,6 +24,7 @@ import os
 import re
 import shlex
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 
@@ -38,6 +39,9 @@ from matplotlib.colors import ListedColormap, BoundaryNorm, LinearSegmentedColor
 from matplotlib.collections import PolyCollection
 from matplotlib.gridspec import GridSpec
 from matplotlib.transforms import blended_transform_factory
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # racine du dépôt, pour importer _shared
+from _shared import run as run_cmd, read_list
 
 POP_DIR = Path("analyses/fst/popmaps_separees_v1")  # dossier des popmaps (listes d'individus par groupe)
 OUTDIR  = Path("analyses/haplotype_heatmap/Awassi_haplo/results/figures_finales/regions_A_9regions_v2")
@@ -125,17 +129,6 @@ def display_label(g):
 def group_color(g):
     """Couleur associée à un groupe (BASE_COLORS, gris par défaut si inconnu)."""
     return BASE_COLORS.get(g, "#999999")
-
-
-def run_cmd(cmd):
-    """Exécute `cmd` et retourne sa sortie standard (texte)."""
-    return subprocess.check_output(cmd, text=True)
-
-
-def read_list(path):
-    """Lit un fichier liste (un échantillon par ligne, lignes vides ignorées)."""
-    with open(path) as f:
-        return [x.strip() for x in f if x.strip()]
 
 
 def safe_name(x):

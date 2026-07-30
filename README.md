@@ -80,6 +80,25 @@ comporte des commentaires dans le corps du code pour suivre chaque étape du cal
 les noms internes du dépôt de travail dans son Annexe A). La table ci-dessous fait la
 correspondance.
 
+### Arborescence
+
+```
+awassi-introgression-genomics/
+├── population_structure/       # PCA, ADMIXTURE
+├── region_selection/            # FST, fd, sélection des régions candidates
+├── validation_tests/            # D-stat, dXY, π, LD, phasage, partage d'haplotypes, F/Ho
+├── annotation_fonctionnelle/    # annotation GFF des SNP candidats
+├── _shared.py                   # fonctions communes (lecture VCF/metadata, pi) réutilisées
+│                                 #   par plusieurs scripts de region_selection/ et validation_tests/
+├── example_data/                # jeu de test synthétique (voir Données ci-dessous)
+├── assets/                      # logos (README)
+├── requirements.txt
+└── LICENSE
+```
+
+`_shared.py` doit rester à la racine du dépôt (import résolu par chemin depuis chaque
+script, indépendamment du répertoire courant).
+
 ### `population_structure/`
 
 | Méthode | Script | Nom dans le rapport (Annexe A) |
@@ -126,7 +145,7 @@ correspondance.
 - [bcftools / vcftools](https://samtools.github.io/bcftools/)
 - [ADMIXTURE](https://dalexander.github.io/admixture/) (Alexander et al. 2009)
 - [Beagle 5.5](https://faculty.washington.edu/browning/beagle/beagle.html) (Browning et al. 2018)
-- Python ≥ 3.8 (pandas, numpy, matplotlib, scipy) ; R (ggplot2)
+- Python ≥ 3.8 : `pip install -r requirements.txt` (pandas, numpy, matplotlib, scipy) ; R (ggplot2)
 
 ## À savoir avant de relancer un script
 
@@ -136,9 +155,10 @@ correspondance.
   `--project <dossier>`, sinon la variable d'environnement `AWASSI_PROJECT_DIR`, sinon
   le répertoire courant — plus de chemin en dur à éditer dans le code pour ceux-là.
 - Les scripts shell (`pca.sh`, `admixture.sh`, `fst_local_genomewide.sh`,
-  `phasing_beagle.sh`) ont encore un chemin absolu en dur vers la machine d'origine
-  (repéré par un commentaire `# chemin en dur à adapter`) — à corriger avant toute
-  exécution.
+  `phasing_beagle.sh`) suivent le même principe : dossier de données via
+  `AWASSI_PROJECT_DIR` (sinon le répertoire courant), plus de chemin absolu en dur.
+  `admixture.sh` prend en plus le binaire ADMIXTURE via `ADMIXTURE_BIN` (sinon cherché
+  dans le `PATH`), `phasing_beagle.sh` le `.jar` de Beagle via `BEAGLE_JAR`.
 - `pca.sh` s'appuie en plus sur un `config_project.sh` (variables `PROJECT_DIR`,
   `VCF_LIST`, `METADATA_VCF_ORDER`) et un script R (`scripts/01_pca/02_plot_pca_25chr.R`)
   du dépôt de travail interne, non inclus ici : script fourni à titre de référence de
@@ -148,6 +168,10 @@ correspondance.
   dans le même dossier `validation_tests/`.
 - `ld_par_sousgroupe.py` importe directement `heatmap_haplotypes_arbre_ld.py`
   (même dossier requis).
+- `fd_genomewide.py`, `dxy.py`, `pi_regions_qc.py`, `pi_genomewide_baseline.py`,
+  `heterozygotie_consanguinite.py`, `heatmap_haplotypes_arbre_ld.py` et
+  `dstat_blockjackknife.py` importent des fonctions communes depuis `_shared.py`
+  (racine du dépôt) — voir Arborescence ci-dessus.
 
 ## Données
 

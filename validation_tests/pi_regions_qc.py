@@ -36,9 +36,13 @@ Usage : python3 30_pi_9regions_20kb_step5kb_QC_v1.py
 from pathlib import Path
 from collections import defaultdict
 import subprocess
+import sys
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # racine du dépôt, pour importer _shared
+from _shared import read_list, gt_to_alt_count, pi_from_values as pi_site_value
 
 POP_DIR = Path("analyses/fst/popmaps_separees_v1")  # dossier des popmaps par groupe
 VCF_DIR = Path("data/raw data_08_06")  # dossier des VCF bruts par chromosome
@@ -80,38 +84,6 @@ REGIONS = [
     {"region_id": "chr17_34.2Mb_SPATA5",           "chr": "17", "start": 34160001,  "end": 34220000,  "P3_best": "Asia"},
     {"region_id": "chr20_0.8Mb_KHDRBS2",           "chr": "20", "start": 765001,    "end": 845000,    "P3_best": "Europe"},
 ]
-
-
-def read_list(path):
-    """Lit un fichier liste (un échantillon par ligne, lignes vides ignorées)."""
-    with open(path) as f:
-        return [x.strip() for x in f if x.strip()]
-
-
-def gt_to_alt_count(gt):
-    """Convertit un génotype texte (0/0, 0/1, 1/1, ./.) en nombre d'allèles alternatifs (0, 1, 2 ou NaN)."""
-    gt = gt.split(":")[0]  # ne garde que le champ GT (au cas où d'autres champs FORMAT sont présents)
-    if gt in {"./.", ".|.", "."}:
-        return np.nan
-    sep = "|" if "|" in gt else "/"
-    parts = gt.split(sep)
-    if len(parts) != 2 or "." in parts:
-        return np.nan
-    try:
-        return int(parts[0]) + int(parts[1])
-    except ValueError:
-        return np.nan  # valeur non numérique (allèle multiallélique inattendu)
-
-
-# Estimateur non biaisé de pi pour un site, à partir des comptes alt déjà filtrés d'un groupe
-def pi_site_value(vals):
-    """vals = comptes alt (0/1/2) déjà filtrés non-NaN pour un groupe à un site."""
-    n_called = len(vals)
-    if n_called < 2:
-        return np.nan
-    two_n = 2 * n_called
-    p = vals.sum() / two_n
-    return (two_n / (two_n - 1)) * 2 * p * (1 - p)  # pi du site, correction petit-échantillon (2n/(2n-1))
 
 
 def quality_flag(n_snps):

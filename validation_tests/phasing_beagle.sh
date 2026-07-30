@@ -4,13 +4,13 @@
 # Sortie  : analyses/phasing_beagle/Phasing_Beagle_v1_5regions/
 # Méthode : extraction ±1Mb autour de chaque région → phasage BEAGLE → index
 #
-# IMPORTANT : chemin absolu en dur ligne 8, à adapter si le dépôt est cloné ailleurs.
 # Nécessite Beagle 5.5 (Browning et al. 2018, https://faculty.washington.edu/browning/beagle/beagle.html)
-# installé sous BEAGLE_JAR ci-dessous — pas fourni dans ce dépôt.
+# — pas fourni dans ce dépôt. Chemin du .jar réglable via BEAGLE_JAR.
+# Usage : AWASSI_PROJECT_DIR=/chemin/vers/le/projet BEAGLE_JAR=/chemin/vers/beagle.jar ./phasing_beagle.sh
 set -euo pipefail
-cd /home/tanguyruel/Bureau/genome_complet_Awassi  # chemin en dur à adapter
+cd "${AWASSI_PROJECT_DIR:-$PWD}"
 
-BEAGLE_JAR="tools/envs/beagle-awassi/share/beagle-5.5_27Feb25.75f-0/beagle.jar"
+BEAGLE_JAR="${BEAGLE_JAR:-tools/envs/beagle-awassi/share/beagle-5.5_27Feb25.75f-0/beagle.jar}"
 VCF_DIR="analyses/fst/local_20kb_step5kb_sep_EU_AM_AUS_v1/filtered_vcf"  # VCF déjà filtrés PASS+biallélique
 OUTDIR="analyses/phasing_beagle/Phasing_Beagle_v1_5regions"
 LOGDIR="logs"

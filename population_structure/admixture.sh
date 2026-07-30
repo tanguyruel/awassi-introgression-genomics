@@ -4,13 +4,13 @@
 # l'erreur de validation croisee (CV error), la plus basse = meilleur K.
 #
 # IMPORTANT : nécessite le binaire ADMIXTURE (Alexander et al. 2009), pas fourni
-# dans ce dépôt. À télécharger depuis https://dalexander.github.io/admixture/
-# puis adapter la variable ADMIXTURE ci-dessous vers l'exécutable téléchargé.
-# Chemin absolu en dur ligne ci-dessous (cd), à adapter si le dépôt est cloné ailleurs.
+# dans ce dépôt. À télécharger depuis https://dalexander.github.io/admixture/,
+# puis soit le mettre dans le PATH, soit régler la variable ADMIXTURE_BIN.
+# Usage : AWASSI_PROJECT_DIR=/chemin/vers/le/projet ADMIXTURE_BIN=/chemin/vers/admixture ./run_admixture_K2_K8_v1.sh
 set -euo pipefail
-cd ~/Bureau/genome_complet_Awassi/analyses/admixture_v2  # chemin en dur à adapter
+cd "${AWASSI_PROJECT_DIR:-$PWD}/analyses/admixture_v2"
 
-ADMIXTURE=/home/tanguyruel/Bureau/3718_SNP_Awassi/test_3718SNPs/software/admixture_linux-1.4.0/admixture  # chemin local à adapter (voir note ci-dessus)
+ADMIXTURE="${ADMIXTURE_BIN:-admixture}"  # binaire ADMIXTURE : $ADMIXTURE_BIN, sinon cherché dans le PATH (voir note ci-dessus)
 BED="genomewide_pruned.bed"
 THREADS=6
 

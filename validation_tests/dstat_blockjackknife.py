@@ -24,8 +24,12 @@ Usage : python3 27_dstat_9regions_blockjackknife_v1.py
 import csv
 import math
 import subprocess
+import sys
 from pathlib import Path
 from collections import defaultdict
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # racine du dépôt, pour importer _shared
+from _shared import read_list
 
 POP_DIR = Path("analyses/fst/popmaps_separees_v1")  # dossier des popmaps par groupe (1 fichier liste d'échantillons par groupe)
 POPMAP_MAIN = Path("data/popmap_main5.tsv")  # seule source pour Ovis_canadensis (absent de POP_DIR)
@@ -57,12 +61,6 @@ REGIONS = [
     {"region_id": "chr17_34.2Mb_SPATA5",           "chr": "17", "strict_start": 34160001,  "strict_end": 34220000,  "P3": "Asia"},
     {"region_id": "chr20_0.8Mb_KHDRBS2",           "chr": "20", "strict_start": 765001,    "strict_end": 845000,    "P3": "Europe"},
 ]
-
-
-def read_list(path):
-    """Lit un fichier liste (un échantillon par ligne, lignes vides ignorées)."""
-    with open(path) as f:
-        return [x.strip() for x in f if x.strip()]
 
 
 def read_group_from_popmap(path, group):

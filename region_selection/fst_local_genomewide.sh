@@ -8,13 +8,13 @@
 # Entrée : VCF par chromosome, GROUP_SOURCE (analyses/fd/.../chr10_groups_used.tsv)
 # Sortie : analyses/fst/local_20kb_step5kb_sep_EU_AM_AUS_v1/merged/
 #          FST_genomewide_20kb_step5kb_long_sep_EU_AM_AUS_{RAW,MIN<n>SNP}.tsv
-# Usage  : MIN_SNPS=10 MAX_JOBS=6 ./21_run_FST_local_20kb_step5kb_separate_EU_AM_AUS.sh
+# Usage  : AWASSI_PROJECT_DIR=/chemin/vers/le/projet MIN_SNPS=10 MAX_JOBS=6 \
+#          ./21_run_FST_local_20kb_step5kb_separate_EU_AM_AUS.sh
 #
-# IMPORTANT : chemin absolu en dur ligne ci-dessous (cd), à adapter si le dépôt est
-# cloné ailleurs.
+# Dossier racine des données : $AWASSI_PROJECT_DIR, sinon le répertoire courant.
 set -euo pipefail
 
-cd ~/Bureau/genome_complet_Awassi  # chemin en dur à adapter
+cd "${AWASSI_PROJECT_DIR:-$PWD}"
 
 OUT="analyses/fst/local_20kb_step5kb_sep_EU_AM_AUS_v1"
 SAMPLES="analyses/fst/popmaps_separees_v1"

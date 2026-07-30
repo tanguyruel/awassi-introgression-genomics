@@ -29,12 +29,16 @@ Usage : python3 50_pi_genomewide_baseline_v1.py
 
 import random
 import subprocess
+import sys
 from collections import defaultdict
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # racine du dépôt, pour importer _shared
+from _shared import gt_to_alt_count, pi_site
 
 random.seed(42)  # graine fixe pour un tirage reproductible des fenêtres
 
@@ -119,33 +123,6 @@ print(f"→ {bed_path}")
 # ── 2. Pi pooled genome-wide, un chromosome à la fois (bcftools par chromosome) ──
 groups_samples = {g: [x.strip() for x in open(POP_DIR / f"{g}.txt") if x.strip()] for g in GROUPS}
 all_samples = sorted(set().union(*groups_samples.values()))
-
-
-def gt_to_alt_count(gt):
-    """Convertit un génotype texte en nombre d'allèles alternatifs (0, 1, 2 ou NaN si manquant)."""
-    gt = gt.split(":")[0]  # ne garde que le champ GT
-    if gt in {"./.", ".|.", "."}:
-        return np.nan
-    sep = "|" if "|" in gt else "/"
-    parts = gt.split(sep)
-    if len(parts) != 2 or "." in parts:
-        return np.nan
-    try:
-        return int(parts[0]) + int(parts[1])
-    except ValueError:
-        return np.nan
-
-
-def pi_site(alt_counts, idx):
-    """Estimateur non biaisé de pi pour un site, restreint aux individus d'un groupe (idx). NaN si < 2 génotypés."""
-    vals = alt_counts[idx]
-    vals = vals[~np.isnan(vals)]
-    n_called = len(vals)
-    if n_called < 2:
-        return np.nan
-    two_n = 2 * n_called
-    p = vals.sum() / two_n
-    return (two_n / (two_n - 1)) * 2 * p * (1 - p)  # pi du site, correction petit-échantillon
 
 
 sum_pi = defaultdict(float)  # somme des pi de site, par groupe, sur toutes les fenêtres échantillonnées

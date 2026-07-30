@@ -16,14 +16,17 @@ import argparse
 import subprocess
 import tempfile
 import os
+import sys
 import re
 import numpy as np
 import pandas as pd
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # racine du dépôt, pour importer _shared
+from _shared import run, parse_bool, load_metadata, get_vcf, gt_to_alt_count, allele_freq_alt
+
 WINDOW = 20_000
 STEP = 5_000
 MIN_SNPS = 20
-MIN_CALLED_FRAC_GROUP = 0.50
 
 # groupes comparés à Awassi pour le calcul de dXY
 TARGET_GROUPS = [
@@ -35,82 +38,6 @@ TARGET_GROUPS = [
     "Australia",
     "Ovis_canadensis",
 ]
-
-def run(cmd):
-    """Exécute `cmd` et retourne sa sortie standard (texte)."""
-    return subprocess.check_output(cmd, text=True)
-
-def parse_bool(x):
-    """Convertit une valeur texte de metadata (ex: "oui"/"1") en booléen."""
-    return str(x).strip().lower() in {"true", "1", "yes", "oui"}
-
-def load_metadata(project):
-    """Charge la table de metadata des échantillons.
-
-    Cherche parmi les emplacements candidats sous `project` et utilise le
-    premier fichier trouvé.
-
-    Parameters
-    ----------
-    project : pathlib.Path
-        Dossier racine des données (contient le sous-dossier analyses/).
-
-    Returns
-    -------
-    pandas.DataFrame
-        Metadata dédupliquée par échantillon, avec les colonnes sample, group
-        et is_awassi.
-    """
-    metadata_candidates = [
-        project / "analyses/haplotype_heatmap/Awassi_haplo/data/metadata/sample_metadata_387_FST_groups.tsv",
-        project / "analyses/synthese_resultats/nnt/06_NNT_indiv_pairwise_base_metadata/results/metadata_used.tsv",
-    ]
-    for p in metadata_candidates:
-        if p.exists():
-            meta = pd.read_csv(p, sep="\t")
-            print(f"Metadata utilisée : {p}")
-            break
-    else:
-        raise FileNotFoundError("Aucune metadata trouvée.")
-
-    if "sample_id" in meta.columns:
-        meta = meta.rename(columns={"sample_id": "sample"})
-    if "fst_group" in meta.columns:
-        meta = meta.rename(columns={"fst_group": "group"})
-
-    meta["sample"] = meta["sample"].astype(str)
-    meta["group"] = meta["group"].astype(str)
-
-    if "is_awassi" in meta.columns:
-        meta["is_awassi"] = meta["is_awassi"].apply(parse_bool)
-    else:
-        meta["is_awassi"] = meta["group"].eq("Awassi")
-
-    return meta.drop_duplicates("sample")
-
-def get_vcf(chrom, project):
-    """Trouve le VCF du chromosome demandé sous `project`.
-
-    Parameters
-    ----------
-    chrom : str
-        Nom du chromosome.
-    project : pathlib.Path
-        Dossier racine des données.
-
-    Returns
-    -------
-    pathlib.Path
-        Chemin du premier VCF candidat qui existe.
-    """
-    candidates = [
-        project / f"data/raw data_08_06/awassi_and_basedata_chr{chrom}.vcf.gz",
-        project / f"data/raw_data_08_06/awassi_and_basedata_chr{chrom}.vcf.gz",
-    ]
-    for p in candidates:
-        if p.exists():
-            return p
-    raise FileNotFoundError(f"VCF introuvable pour chr{chrom}")
 
 def get_groups(meta, vcf_samples):
     """Construit le dictionnaire groupe -> échantillons (Awassi + groupes cibles).
@@ -157,55 +84,6 @@ def get_groups(meta, vcf_samples):
         raise RuntimeError("Ovis_canadensis vide.")
 
     return {g: s for g, s in groups.items() if len(s) >= 2}  # ne garde que les groupes avec au moins 2 individus
-
-def gt_to_alt_count(gt):
-    """Convertit un génotype VCF (ex: "0/1") en nombre de copies de l'allèle alternatif (0, 1 ou 2, NaN si manquant/ambigu)."""
-    gt = str(gt).split(":")[0]
-
-    if gt in {"./.", ".|.", "."}:
-        return np.nan
-
-    sep = "|" if "|" in gt else "/"
-    parts = gt.split(sep)
-
-    if len(parts) != 2 or "." in parts:
-        return np.nan
-
-    try:
-        return int(parts[0]) + int(parts[1])  # somme des deux allèles (0/1/2 copies de l'allèle alternatif)
-    except Exception:
-        return np.nan
-
-def allele_freq_alt(counts, idx):
-    """Fréquence de l'allèle alternatif pour un sous-ensemble d'échantillons.
-
-    Parameters
-    ----------
-    counts : numpy.ndarray
-        Nombre de copies de l'allèle alt par échantillon (voir gt_to_alt_count),
-        NaN si non génotypé.
-    idx : numpy.ndarray
-        Indices des échantillons du groupe dans `counts`.
-
-    Returns
-    -------
-    tuple[float, int]
-        Fréquence alt (NaN si le groupe est vide ou insuffisamment génotypé)
-        et nombre d'échantillons effectivement génotypés.
-    """
-    vals = counts[idx]
-    vals = vals[~np.isnan(vals)]
-
-    n_total = len(idx)
-    n_called = len(vals)
-
-    if n_total == 0:
-        return np.nan, n_called
-
-    if n_called / n_total < MIN_CALLED_FRAC_GROUP:
-        return np.nan, n_called
-
-    return vals.sum() / (2 * n_called), n_called  # fréquence alt = somme des comptes / (2 x nb génotypés)
 
 def compute_region(region, meta, outdir, project):
     """Calcule dXY (Awassi vs chaque groupe cible) pour une région candidate.
