@@ -22,7 +22,7 @@ Océanie), signal compatible avec une introgression ancienne.
 de la Recherche Scientifique, tutelle du LECA) reproduits à titre d'affiliation ; propriété
 de leurs institutions respectives, non couverts par la licence MIT de ce dépôt.*
 
-## En bref, la génétique pour les nuls
+## En bref, l'introgression pour les nuls
 
 Un mouton hérite de son ADN de ses ancêtres. Quand deux populations longtemps séparées se
 recroisent, des fragments d'ADN de l'une peuvent rester durablement présents chez l'autre :
