@@ -44,10 +44,8 @@ mouton (Anatolie, Zagros, cf. ci-dessus). Une race installée sur cette zone dep
 millénaires a côtoyé les populations ovines qui y ont circulé au fil du temps — ce qui en
 fait un candidat naturel pour chercher des traces d'échanges génétiques anciens.
 
-Ce qu'on cherche concrètement : des zones du génome où deux races (ou une race domestique
-et une espèce sauvage) sont beaucoup plus semblables que ne le voudrait leur parenté
-d'ensemble. Toutes les races domestiques partagent la même origine ancestrale — le mouflon
-fondateur, il y a environ 10 000 ans (cf. ci-dessus) — et se ressemblent donc un peu
+Ce qu'on cherche concrètement : des zones du génome où deux races sont beaucoup plus semblables que ne le voudrait leur parenté
+d'ensemble. Toutes les races domestiques partageant la même origine ancestrale elles se ressemblent donc un peu
 partout dans le génome à des degrés divers, simplement du fait de cette généalogie
 commune : ce n'est **pas** ce qu'on cherche. Ce qu'on cherche, c'est un endroit précis du
 génome où la ressemblance dépasse largement ce que cette généalogie d'ensemble
