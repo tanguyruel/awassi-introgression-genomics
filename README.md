@@ -83,9 +83,11 @@ Ce qu'on cherche, ce sont des endroits précis du génome où Awassi s'écarte a
 ce voisinage immédiat pour ressembler nettement plus qu'ailleurs dans le génome à des races
 asiatiques, africaines ou européennes. Une telle ressemblance avec un groupe éloigné ne
 s'explique plus par le simple voisinage géographique : elle suggère un échange plus
-ponctuel entre populations plus lointaines — par exemple des mouvements d'animaux sur de
-longues distances (routes d'échange, diffusion d'une race pour ses qualités d'élevage) —
-survenu à un moment de l'histoire des deux populations depuis leur séparation.
+ponctuel entre populations plus lointaines, survenu à un moment de l'histoire des deux
+populations depuis leur séparation. Les échanges commerciaux, quelle que soit leur nature,
+se sont historiquement accompagnés de mouvements d'animaux (troupeaux vivriers, bêtes de
+somme, animaux d'élevage) sur de longues distances — autant d'occasions de transfert
+génétique, en plus de la diffusion délibérée d'une race pour ses qualités d'élevage.
 
 Les scripts de ce dépôt : (1) décrivent la structure génétique globale des populations
 étudiées, (2) balayent le génome pour repérer des zones suspectes, (3) vérifient par
