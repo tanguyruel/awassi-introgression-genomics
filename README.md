@@ -34,13 +34,24 @@ ont évolué indépendamment pendant des millénaires, donnant naissance aux cen
 races actuelles (Awassi, les autres races du Moyen-Orient, africaines, asiatiques,
 européennes...).
 
-Ce qu'on cherche concrètement : de longues séquences du génome presque identiques entre
-deux races (ou entre une race domestique et une espèce sauvage) qui n'ont plus de lien
-direct depuis très longtemps. Une longue séquence quasi identique trahit un échange
-**récent** entre les deux populations : l'ADN n'a pas encore eu le temps de se recombiner,
-le bloc partagé reste donc long. À l'inverse, un échange ancien laisse des traces bien
-plus courtes, car la recombinaison et les mutations accumulées finissent par fragmenter
-et brouiller le signal au fil des générations.
+Ce qu'on cherche concrètement : des zones du génome où deux races (ou une race domestique
+et une espèce sauvage) sont beaucoup plus semblables que ne le voudrait leur parenté
+d'ensemble. Toutes les races domestiques partagent la même origine ancestrale — le mouflon
+fondateur, il y a environ 10 000 ans (cf. ci-dessus) — et se ressemblent donc un peu
+partout dans le génome à des degrés divers, simplement du fait de cette généalogie
+commune : ce n'est **pas** ce qu'on cherche. Ce qu'on cherche, c'est un endroit précis du
+génome où la ressemblance dépasse largement ce que cette généalogie d'ensemble
+expliquerait — un signal propre à cet endroit, qu'il résulte d'un échange **récent**
+(quelques générations à quelques siècles) ou plus **ancien** (jusqu'à plusieurs
+millénaires, mais toujours postérieur à l'origine commune il y a 10 000 ans).
+
+La longueur du bloc d'ADN partagé donne ensuite une indication sur l'ancienneté probable
+de cet échange : une longue séquence quasi identique trahit plutôt un échange récent —
+l'ADN n'a pas encore eu le temps de se recombiner, le bloc partagé reste donc long. Un
+échange plus ancien laisse au contraire des traces plus courtes, la recombinaison et les
+mutations accumulées finissant par fragmenter et brouiller le signal au fil des
+générations. Mais dans les deux cas, dès que la ressemblance locale dépasse nettement ce
+qu'expliquerait la généalogie d'ensemble, c'est le signal d'introgression recherché ici.
 
 Comment une telle trace apparaît : quand un individu d'une race ou d'une espèce s'hybride
 avec un individu d'une autre, puis que sa descendance se recroise plusieurs fois avec la
