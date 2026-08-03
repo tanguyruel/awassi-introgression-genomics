@@ -27,8 +27,8 @@ de leurs institutions respectives, non couverts par la licence MIT de ce dépôt
 **Origine des moutons domestiques**
 
 Tous les moutons domestiques (Ovis aries) descendent d'une même espèce sauvage : le mouflon d'Asie Mineure, Ovis gmelini (également appelé Ovis orientalis).
-Des études génétiques basées sur l'ADN mitochondrial ont confirmé qu'il constitue l'unique ancêtre maternel de l'ensemble des races domestiques. 
-La domestication a eu lieu il y a environ 10 000 ans au Proche-Orient, principalement en Anatolie et dans les montagnes du Zagros. 
+Des études génétiques basées sur l'ADN mitochondrial ont confirmé qu'il constitue l'unique ancêtre maternel de l'ensemble des races domestiques.
+La domestication a eu lieu il y a environ 10 000 ans au Proche-Orient, principalement en Anatolie et dans les montagnes du Zagros.
 Depuis ce foyer de domestication, les moutons se sont progressivement répandus sur plusieurs continents, où ils ont évolué indépendamment pendant des millénaires,
 donnant naissance aux centaines de races actuelles réparties en Europe, en Afrique, en Asie et au Moyen-Orient, dont l'Awassi.
 
@@ -36,8 +36,8 @@ donnant naissance aux centaines de races actuelles réparties en Europe, en Afri
 
 Ce stage s'intéresse spécifiquement à la race Awassi pour deux raisons.
 
-La première est agronomique. L'Awassi est un mouton à queue grasse élevé du sud-est de la Turquie jusqu'à l'Irak, la Syrie, la Jordanie et le Liban. 
-Il est remarquablement adapté aux milieux arides : sa queue stocke des réserves énergétiques mobilisables pendant les périodes de sécheresse, 
+La première est agronomique. L'Awassi est un mouton à queue grasse élevé du sud-est de la Turquie jusqu'à l'Irak, la Syrie, la Jordanie et le Liban.
+Il est remarquablement adapté aux milieux arides : sa queue stocke des réserves énergétiques mobilisables pendant les périodes de sécheresse,
 sa toison de type tapis limite l'échauffement dû au rayonnement solaire, et il constitue aujourd'hui la race laitière non européenne la plus répandue au monde.
 
 La seconde est historique. Son aire d'élevage recouvre le berceau même de la domestication du mouton. 
@@ -46,16 +46,16 @@ Elle représente donc un excellent modèle pour rechercher d'éventuelles traces
 
 **Qu'est-ce que l'introgression ?**
 
-Toutes les races domestiques partageant une origine commune, elles présentent naturellement une certaine ressemblance sur l'ensemble de leur génome. 
+Toutes les races domestiques partageant une origine commune, elles présentent naturellement une certaine ressemblance sur l'ensemble de leur génome.
 Cette similarité est attendue et reflète simplement leur histoire évolutive commune.
 
-L'objectif n'est donc pas de mesurer cette ressemblance globale, 
-mais d'identifier des régions précises du génome où deux populations deviennent beaucoup plus similaires que ne le laisserait prévoir leur parenté générale. 
-Une telle anomalie peut être le signe d'un échange génétique survenu après leur séparation, 
+L'objectif n'est donc pas de mesurer cette ressemblance globale,
+mais d'identifier des régions précises du génome où deux populations deviennent beaucoup plus similaires que ne le laisserait prévoir leur parenté générale.
+Une telle anomalie peut être le signe d'un échange génétique survenu après leur séparation,
 qu'il soit relativement récent (quelques générations à quelques siècles) ou beaucoup plus ancien (jusqu'à plusieurs millénaires).
 
-La taille du fragment d'ADN partagé fournit également une indication sur l'ancienneté probable de cet échange. 
-Un long segment presque identique indique généralement une introgression récente : l'ADN n'a pas encore eu le temps d'être fragmenté par les recombinaisons. 
+La taille du fragment d'ADN partagé fournit également une indication sur l'ancienneté probable de cet échange.
+Un long segment presque identique indique généralement une introgression récente : l'ADN n'a pas encore eu le temps d'être fragmenté par les recombinaisons.
 À l'inverse, une introgression ancienne laisse des fragments plus courts, progressivement réduits par les recombinaisons et les mutations accumulées au fil des générations.
 Dans les deux cas, une ressemblance locale nettement supérieure à celle attendue constitue le signal recherché.
 
