@@ -22,14 +22,39 @@ Océanie), signal compatible avec une introgression ancienne.
 de la Recherche Scientifique, tutelle du LECA) reproduits à titre d'affiliation ; propriété
 de leurs institutions respectives, non couverts par la licence MIT de ce dépôt.*
 
-## En bref, l'introgression pour les nuls
+## Comprendre l'introgression, simplement
+
+Tous les moutons domestiques descendent d'une même espèce sauvage ancestrale : le mouflon
+d'Asie Mineure, *Ovis gmelini* (aussi appelé *Ovis orientalis*). Des études génétiques
+récentes basées sur l'ADN mitochondrial ont confirmé qu'il s'agit de l'unique ancêtre
+maternel de l'ensemble des moutons domestiques (*Ovis aries*) dans le monde. Depuis ce
+berceau de domestication au Proche-Orient, les moutons se sont ensuite répandus sur
+plusieurs continents et ont évolué indépendamment pendant des millénaires, donnant
+naissance aux centaines de races actuelles (Awassi, races européennes, africaines,
+asiatiques, américaines...).
+
+Ce qu'on cherche concrètement : de longues séquences du génome presque identiques entre
+deux races (ou entre une race domestique et une espèce sauvage) qui n'ont plus de lien
+direct depuis très longtemps. Une longue séquence quasi identique trahit un échange
+**récent** entre les deux populations : l'ADN n'a pas encore eu le temps de se recombiner,
+le bloc partagé reste donc long. À l'inverse, un échange ancien laisse des traces bien
+plus courtes, car la recombinaison et les mutations accumulées finissent par fragmenter
+et brouiller le signal au fil des générations.
+
+Comment une telle trace apparaît : quand un individu d'une race ou d'une espèce s'hybride
+avec un individu d'une autre, puis que sa descendance se recroise plusieurs fois avec la
+population de départ (rétrocroisement), un fragment isolé de l'ADN étranger peut se
+retrouver durablement dans le pool génétique de la population de base — d'autant plus
+facilement que ce fragment procure un avantage à l'animal qui le porte (meilleure
+reproduction, meilleure transmission à sa descendance, etc.), ce qui favorise sa
+conservation et sa diffusion dans la population au fil des générations.
 
 Un mouton hérite de son ADN de ses ancêtres. Quand deux populations longtemps séparées se
-recroisent, des fragments d'ADN de l'une peuvent rester durablement présents chez l'autre :
-c'est l'**introgression**. Ce stage cherche des traces de ce phénomène chez le mouton
-Awassi (Moyen-Orient) : à certains endroits précis du génome, ressemble-t-il un peu plus que
-prévu par hasard à des moutons d'Europe, d'Afrique, d'Asie ou d'Amérique ? Si oui, c'est le
-signe qu'un échange génétique ancien a eu lieu à cet endroit précis.
+recroisent, des fragments d'ADN de l'une peuvent ainsi rester durablement présents chez
+l'autre : c'est l'**introgression**. Ce stage cherche des traces de ce phénomène chez le
+mouton Awassi (Moyen-Orient) : à certains endroits précis du génome, ressemble-t-il un peu
+plus que prévu par hasard à des moutons d'Europe, d'Afrique, d'Asie ou d'Amérique ? Si oui,
+c'est le signe qu'un échange génétique ancien a eu lieu à cet endroit précis.
 
 Les scripts de ce dépôt : (1) décrivent la structure génétique globale des populations
 étudiées, (2) balayent le génome pour repérer des zones suspectes, (3) vérifient par
@@ -150,10 +175,15 @@ script, indépendamment du répertoire courant).
 ## À savoir avant de relancer un script
 
 - Tous les scripts supposent d'être lancés depuis la racine de ce dépôt.
-- Les scripts Python de `region_selection/` et `validation_tests/` qui ont besoin du
-  dossier de données externe (`data/`, `analyses/`, hors dépôt) le prennent via
+- 5 scripts Python (`fd_genomewide.py`, `dxy.py`, `ccdc91_retest_pic.py`,
+  `bootstrap_specificite_haplotypique.py`, `partage_haplotypes_tous_groupes.py`)
+  prennent le dossier de données externe (`data/`, `analyses/`, hors dépôt) via
   `--project <dossier>`, sinon la variable d'environnement `AWASSI_PROJECT_DIR`, sinon
-  le répertoire courant — plus de chemin en dur à éditer dans le code pour ceux-là.
+  le répertoire courant. Les autres scripts Python de `region_selection/` et
+  `validation_tests/` gardent des chemins **relatifs** en dur en tête de fichier
+  (`BASE`, `POP_DIR`, `VCF_DIR`, `OUTDIR`...) : pas de chemin absolu, mais à éditer
+  directement dans le code si les données ne sont pas au même sous-chemin que celui
+  utilisé pendant le stage.
 - Les scripts shell (`pca.sh`, `admixture.sh`, `fst_local_genomewide.sh`,
   `phasing_beagle.sh`) suivent le même principe : dossier de données via
   `AWASSI_PROJECT_DIR` (sinon le répertoire courant), plus de chemin absolu en dur.

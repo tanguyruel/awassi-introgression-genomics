@@ -122,7 +122,6 @@ find_vcf() {
   local candidates=(
     "data/raw data_08_06/awassi_and_basedata_chr${chr}.vcf.gz"
     "data/raw_data_08_06/awassi_and_basedata_chr${chr}.vcf.gz"
-    "/home/deschaoc/AWASSI/awassi_and_basedata_chr${chr}.vcf.gz"
     "data/awassi_and_basedata_chr${chr}.vcf.gz"
   )
 
