@@ -189,8 +189,8 @@ simulation et les résultats obtenus.
 
 ## Remerciements
 
-Merci à François, Océane et Frédéric Boyer (LECA) pour leur accompagnement pendant le
-stage. Merci en particulier à Frédéric pour nos échanges sur l'introgression, ses idées
+Merci à François, Océane (LECA) pour leur accompagnement pendant le
+stage. Merci aussi à Frédéric Boyer pour nos échanges, ses idées
 de méthode, et son aide sur heatmap + arbre + LD (`heatmap_haplotypes_arbre_ld.py`).
 
 ## Citation
