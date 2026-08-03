@@ -49,9 +49,10 @@ semblables que ne le voudrait leur parenté d'ensemble. Toutes les races domesti
 partageant la même origine ancestrale, elles se ressemblent donc un peu partout dans le
 génome à des degrés divers, simplement du fait de cette généalogie commune : ce n'est
 **pas** ce qu'on cherche. Ce qu'on cherche, c'est un endroit précis du génome où la
-ressemblance dépasse largement ce que cette généalogie d'ensemble expliquerait, signe d'un
-échange **récent** (quelques générations à quelques siècles) ou plus **ancien** (jusqu'à
-plusieurs millénaires, mais toujours postérieur à cette origine commune).
+ressemblance dépasse largement ce que cette généalogie d'ensemble expliquerait. Ce signal
+peut venir d'un échange **récent** (quelques générations à quelques siècles) ou plus
+**ancien** (jusqu'à plusieurs millénaires, mais toujours postérieur à cette origine
+commune).
 
 La longueur du bloc d'ADN partagé donne ensuite une indication sur l'ancienneté probable
 de cet échange : une longue séquence quasi identique trahit plutôt un échange récent —
