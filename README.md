@@ -49,12 +49,12 @@ facilement que ce fragment procure un avantage à l'animal qui le porte (meilleu
 reproduction, meilleure transmission à sa descendance, etc.), ce qui favorise sa
 conservation et sa diffusion dans la population au fil des générations.
 
-Un mouton hérite de son ADN de ses ancêtres. Quand deux populations longtemps séparées se
-recroisent, des fragments d'ADN de l'une peuvent ainsi rester durablement présents chez
-l'autre : c'est l'**introgression**. Ce stage cherche des traces de ce phénomène chez le
-mouton Awassi (Moyen-Orient) : à certains endroits précis du génome, ressemble-t-il un peu
-plus que prévu par hasard à des moutons d'Europe, d'Afrique, d'Asie ou d'Amérique ? Si oui,
-c'est le signe qu'un échange génétique ancien a eu lieu à cet endroit précis.
+C'est cette persistance durable d'un fragment d'ADN étranger dans le patrimoine génétique
+d'une population qu'on appelle l'**introgression**. Ce stage cherche des traces de ce
+phénomène chez le mouton Awassi (Moyen-Orient) : à certains endroits précis du génome,
+ressemble-t-il un peu plus que prévu par hasard à des moutons d'Europe, d'Afrique, d'Asie
+ou d'Amérique ? Si oui, c'est le signe qu'un échange génétique ancien a eu lieu à cet
+endroit précis.
 
 Les scripts de ce dépôt : (1) décrivent la structure génétique globale des populations
 étudiées, (2) balayent le génome pour repérer des zones suspectes, (3) vérifient par
