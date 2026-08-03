@@ -31,7 +31,8 @@ maternel de l'ensemble des moutons domestiques (*Ovis aries*) dans le monde. Dep
 berceau de domestication au Proche-Orient (il y a environ 10 000 ans, entre l'Anatolie
 orientale et le Zagros), les moutons se sont ensuite répandus sur plusieurs continents et
 ont évolué indépendamment pendant des millénaires, donnant naissance aux centaines de
-races actuelles (Awassi, races européennes, africaines, asiatiques, américaines...).
+races actuelles (Awassi, les autres races du Moyen-Orient, africaines, asiatiques,
+européennes...).
 
 Ce qu'on cherche concrètement : de longues séquences du génome presque identiques entre
 deux races (ou entre une race domestique et une espèce sauvage) qui n'ont plus de lien
