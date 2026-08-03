@@ -28,11 +28,21 @@ Tous les moutons domestiques descendent d'une même espèce sauvage ancestrale :
 d'Asie Mineure, *Ovis gmelini* (aussi appelé *Ovis orientalis*). Des études génétiques
 récentes basées sur l'ADN mitochondrial ont confirmé qu'il s'agit de l'unique ancêtre
 maternel de l'ensemble des moutons domestiques (*Ovis aries*) dans le monde. Depuis ce
-berceau de domestication au Proche-Orient (il y a environ 10 000 ans, entre l'Anatolie
-orientale et le Zagros), les moutons se sont ensuite répandus sur plusieurs continents et
-ont évolué indépendamment pendant des millénaires, donnant naissance aux centaines de
-races actuelles (Awassi, les autres races du Moyen-Orient, africaines, asiatiques,
-européennes...).
+berceau de domestication au Proche-Orient (il y a environ 10 000 ans, en Anatolie et dans
+le Zagros), les moutons se sont ensuite répandus sur plusieurs continents et ont évolué
+indépendamment pendant des millénaires, donnant naissance aux centaines de races actuelles
+(Awassi, les autres races du Moyen-Orient, africaines, asiatiques, européennes...).
+
+**Pourquoi le mouton Awassi ?** Ce stage étudie spécifiquement cette race pour deux
+raisons. D'abord un intérêt agronomique direct : l'Awassi est un mouton à queue grasse,
+élevé du sud-est de la Turquie jusqu'à l'Irak, la Syrie, la Jordanie et le Liban,
+remarquablement adapté aux milieux arides — sa queue stocke des réserves énergétiques
+mobilisables en saison sèche, sa toison de type tapis limite l'échauffement solaire, et
+c'est la race laitière non européenne la plus largement répandue au monde. Ensuite un
+intérêt historique : son aire d'élevage recouvre justement le berceau de domestication du
+mouton (Anatolie, Zagros, cf. ci-dessus). Une race installée sur cette zone depuis des
+millénaires a côtoyé les populations ovines qui y ont circulé au fil du temps — ce qui en
+fait un candidat naturel pour chercher des traces d'échanges génétiques anciens.
 
 Ce qu'on cherche concrètement : des zones du génome où deux races (ou une race domestique
 et une espèce sauvage) sont beaucoup plus semblables que ne le voudrait leur parenté
@@ -63,13 +73,19 @@ conservation et sa diffusion dans la population au fil des générations.
 
 C'est cette persistance durable d'un fragment d'ADN étranger dans le patrimoine génétique
 d'une population qu'on appelle l'**introgression**. Ce stage cherche des traces de ce
-phénomène chez le mouton Awassi (Moyen-Orient). Normalement, la proximité géographique se
-traduit par une proximité génétique : Awassi devrait donc ressembler avant tout à ses
-voisins du Moyen-Orient. Ce qu'on cherche, ce sont des endroits précis du génome où Awassi
-ressemble au contraire nettement plus qu'ailleurs dans le génome à des races asiatiques,
-africaines ou européennes qu'à ses voisins du Moyen-Orient. Si oui, c'est le signe qu'un
-échange génétique a eu lieu à cet endroit précis, à un moment de l'histoire des deux
-populations depuis leur séparation.
+phénomène chez le mouton Awassi (Moyen-Orient). Normalement, la proximité géographique
+entre deux races se traduit par une proximité génétique : des troupeaux voisins ont plus
+d'occasions de se croiser (pâturages partagés, transhumance), et finissent par se
+ressembler davantage. Awassi devrait donc ressembler avant tout à ses voisins du
+Moyen-Orient — et c'est globalement le cas : la différenciation génétique entre Awassi et
+le reste du Moyen-Orient, mesurée sur l'ensemble du génome, est très faible (FST ≈ 0,0064).
+Ce qu'on cherche, ce sont des endroits précis du génome où Awassi s'écarte au contraire de
+ce voisinage immédiat pour ressembler nettement plus qu'ailleurs dans le génome à des races
+asiatiques, africaines ou européennes. Une telle ressemblance avec un groupe éloigné ne
+s'explique plus par le simple voisinage géographique : elle suggère un échange plus
+ponctuel entre populations plus lointaines — par exemple des mouvements d'animaux sur de
+longues distances (routes d'échange, diffusion d'une race pour ses qualités d'élevage) —
+survenu à un moment de l'histoire des deux populations depuis leur séparation.
 
 Les scripts de ce dépôt : (1) décrivent la structure génétique globale des populations
 étudiées, (2) balayent le génome pour repérer des zones suspectes, (3) vérifient par
