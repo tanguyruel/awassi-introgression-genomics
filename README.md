@@ -12,129 +12,21 @@
   <img alt="Stage LECA 2026" src="https://img.shields.io/badge/stage-LECA%202026-4c9a2a.svg">
 </p>
 
-Scripts d'analyse accompagnant le rapport de stage *« Introgression génomique chez le
-mouton Awassi — signaux locaux d'introgression et validation multi-critères »* (Tanguy Ruel,
-[LECA](https://leca.osug.fr/)). Recherche de régions du génome où la race Awassi (Moyen-Orient) présente une
-affinité locale anormale avec un autre groupe géographique (Afrique, Asie, Europe, Amérique,
-Océanie), signal compatible avec une introgression.
-
 *Logos LECA (Laboratoire d'Écologie Alpine, UMR CNRS/UGA/USMB 5553) et CNRS (Centre National
 de la Recherche Scientifique, tutelle du LECA) reproduits à titre d'affiliation ; propriété
 de leurs institutions respectives, non couverts par la licence MIT de ce dépôt.*
 
-## Comprendre l'introgression, simplement
-
-**Origine des moutons domestiques**
-
-Tous les moutons domestiques (Ovis aries) descendent d'une même espèce sauvage : le mouflon d'Asie Mineure, Ovis gmelini (également appelé Ovis orientalis).
-Des études génétiques basées sur l'ADN mitochondrial ont confirmé qu'il constitue l'unique ancêtre maternel de l'ensemble des races domestiques.
-La domestication a eu lieu il y a environ 10 000 ans au Proche-Orient, principalement en Anatolie et dans les montagnes du Zagros.
-Depuis ce foyer de domestication, les moutons se sont progressivement répandus sur plusieurs continents, où ils ont évolué indépendamment pendant des millénaires,
-donnant naissance aux centaines de races actuelles réparties en Europe, en Afrique, en Asie et au Moyen-Orient, dont l'Awassi.
-
-**Pourquoi étudier le mouton Awassi ?**
-
-Ce stage s'intéresse spécifiquement à la race Awassi pour deux raisons.
-
-L'Awassi présente de nombreux avantages au niveau agronomique, en effet c'est un mouton à queue grasse élevé du sud-est de la Turquie jusqu'à l'Irak, la Syrie, la Jordanie et le Liban.
-Il est remarquablement adapté aux milieux arides : sa queue stocke des réserves énergétiques mobilisables pendant les périodes de sécheresse,
-sa toison de type tapis limite l'échauffement dû au rayonnement solaire, et il constitue aujourd'hui la race laitière non européenne la plus répandue au monde.
-
-La seconde est historique. Son aire d'élevage recouvre le berceau même de la domestication du mouton. 
-Présente dans cette région depuis des millénaires, cette race a côtoyé les nombreuses populations ovines qui y ont circulé au fil de l'histoire.
-Elle représente donc un excellent modèle pour rechercher d'éventuelles traces d'échanges génétiques anciens.
-
-**Qu'est-ce que l'introgression ?**
-
-Toutes les races domestiques partageant une origine commune, elles présentent naturellement une certaine ressemblance sur l'ensemble de leur génome.
-Cette similarité est attendue et reflète simplement leur histoire évolutive commune.
-
-L'objectif n'est donc pas de mesurer cette ressemblance globale,
-mais d'identifier des régions précises du génome où deux populations deviennent beaucoup plus similaires que ne le laisserait prévoir leur parenté générale.
-Une telle anomalie peut être le signe d'un échange génétique survenu après leur séparation,
-qu'il soit relativement récent (quelques générations à quelques siècles) ou beaucoup plus ancien (jusqu'à plusieurs millénaires).
-
-La taille du fragment d'ADN partagé fournit également une indication sur l'ancienneté probable de cet échange.
-Un long segment presque identique indique généralement une introgression récente : l'ADN n'a pas encore eu le temps d'être fragmenté par les recombinaisons.
-À l'inverse, une introgression ancienne laisse des fragments plus courts, progressivement réduits par les recombinaisons et les mutations accumulées au fil des générations.
-Dans les deux cas, une ressemblance locale nettement supérieure à celle attendue constitue le signal recherché.
-
-**Comment apparaît une introgression ?**
-
-Une introgression peut apparaître lorsqu'un individu issu d'une population (ou d'une espèce) s'hybride avec un individu d'une autre population, 
-puis que sa descendance se reproduit plusieurs générations avec la population d'origine (rétrocroisements). 
-Au fil des générations, la majeure partie du génome étranger disparaît, mais certains fragments peuvent être conservés durablement.
-
-Cette persistance est particulièrement probable lorsque le fragment apporte un avantage adaptatif, 
-par exemple une meilleure survie, une meilleure reproduction ou une meilleure adaptation au milieu. 
-La sélection naturelle favorise alors sa diffusion dans la population.
-
-C'est cette conservation durable d'un fragment d'ADN provenant d'une autre population que l'on appelle une introgression.
-
-**Pourquoi rechercher ce phénomène chez l'Awassi ?**
-
-En règle générale, des populations géographiquement proches sont également génétiquement proches, 
-car elles ont davantage d'occasions d'échanger des individus au cours du temps (transhumance, pâturages partagés, commerce, déplacements des troupeaux...).
-
-On s'attend donc à ce que l'Awassi soit principalement proche des autres races du Moyen-Orient. 
-C'est effectivement ce que montrent les données : 
-la différenciation génétique entre l'Awassi et les autres populations moyen-orientales est très faible à l'échelle du génome entier (FST ≈ 0,0064).
-
-L'objectif est d'identifier les rares régions du génome où cette logique s'inverse : 
-des régions dans lesquelles l'Awassi ressemble davantage à certaines populations asiatiques, africaines ou européennes qu'à ses voisins immédiats. 
-De tels signaux peuvent révéler des épisodes ponctuels d'introgression survenus au cours de l'histoire des populations.
-
-Les échanges commerciaux, les migrations pastorales et la diffusion volontaire de races d'élevage ont favorisé, 
-au fil des siècles, le déplacement d'animaux sur de longues distances, créant autant d'occasions de transfert génétique.
-
-**Objectif de ce dépôt**
-
-Les scripts de ce dépôt permettent de :
-
-décrire la structure génétique des populations étudiées ;
-parcourir l'ensemble du génome afin d'identifier des régions candidates à l'introgression ;
-valider ces régions à l'aide de plusieurs méthodes complémentaires afin de distinguer les véritables signaux du bruit statistique ;
-identifier les gènes présents dans les régions candidates afin de proposer des hypothèses sur leur intérêt biologique.
-
-## Glossaire express
-
-| Terme | Sens simple |
-|---|---|
-| SNP | Une position du génome où l'ADN diffère d'un individu à l'autre (une « lettre » variable). |
-| VCF | Format de fichier qui liste les SNP observés chez tous les individus séquencés. |
-| FST | Différenciation génétique entre deux groupes à un endroit du génome (0 = identiques, 1 = totalement différents). |
-| fd / D-stat | Mesurent si un groupe partage anormalement plus d'ADN avec un autre groupe que prévu — signal d'introgression. |
-| dXY | Divergence génétique brute entre deux groupes, indépendante de leur diversité interne. |
-| π (pi) | Diversité génétique à l'intérieur d'un groupe. |
-| LD (déséquilibre de liaison) | Tendance de deux positions du génome à être héritées ensemble ; un LD élevé et localisé peut trahir un bloc d'ADN introgressé récent. |
-| PCA / ADMIXTURE | Méthodes qui résument la structure génétique globale d'un jeu d'individus (combien de groupes ancestraux, qui ressemble à qui). |
-| Phasage | Reconstitution de quel allèle vient de quel chromosome parental, pour reconstruire des haplotypes. |
-| Haplotype | Combinaison de variants portée ensemble sur un même chromosome. |
-| Bootstrap / jackknife | Méthodes de ré-échantillonnage statistique pour estimer la fiabilité d'un résultat. |
-
-## Déroulé du pipeline
-
-```mermaid
-flowchart TD
-    A["VCF filtrés (25 chromosomes)"] --> B["population_structure/<br>PCA · ADMIXTURE"]
-    A --> C["region_selection/<br>FST local · fd genome-wide"]
-    C --> D["Sélection des régions candidates<br>score combiné + intersection Manhattan"]
-    B -.contexte de structure.-> D
-    D --> E["validation_tests/<br>D-stat · dXY · π · LD · phasage ·<br>partage d'haplotypes · bootstrap · F/Ho"]
-    E --> F["annotation_fonctionnelle/<br>annotation GFF des SNP candidats"]
-    F --> G["Régions candidates validées<br>+ gènes associés"]
-```
-
 ## Contenu de ce dépôt
 
-20 scripts : un par méthode utilisée dans le rapport, organisés selon les mêmes sections
-que le rapport (structure de population, sélection des régions candidates, tests de
-validation, annotation fonctionnelle). Le dépôt de travail complet (~340 scripts,
-itérations de mise au point incluses) reste local ; seule la version de référence de
-chaque méthode est publiée ici, sous un nom explicite.
+Ce dépôt contient 20 scripts, un par méthode utilisée dans le rapport, organisés selon les
+mêmes sections que le rapport (structure de population, sélection des régions candidates,
+tests de validation, annotation fonctionnelle).
 
-Chaque script commence par un commentaire d'en-tête (rôle, entrée, sortie, usage) et
-comporte des commentaires dans le corps du code pour suivre chaque étape du calcul.
+Seule la version de référence de chaque méthode est publiée ici, sous un nom explicite : le
+dépôt de travail complet (~340 scripts, itérations de mise au point incluses) reste local.
+
+Chaque script commence par un commentaire d'en-tête (rôle, entrée, sortie, usage) et comporte
+des commentaires dans le corps du code pour suivre chaque étape du calcul.
 
 **Note** : les noms de fichiers ont été simplifiés par rapport au rapport de stage (qui cite
 les noms internes du dépôt de travail dans son Annexe A). La table ci-dessous fait la
@@ -198,6 +90,128 @@ script, indépendamment du répertoire courant).
 | Méthode | Script | Nom dans le rapport (Annexe A) |
 |---|---|---|
 | Annotation fonctionnelle (GFF Oar_v4.0) | `annotation_variants_gff.py` | `synthese/40_annotate_variants_9regions_v1.py` |
+
+## Objectif de ce dépôt
+
+Ce dépôt accompagne le rapport de stage *« Introgression génomique chez le mouton Awassi —
+signaux locaux d'introgression et validation multi-critères »* (Tanguy Ruel,
+[LECA](https://leca.osug.fr/)).
+
+L'objectif est de rechercher des régions du génome où la race Awassi (Moyen-Orient) présente
+une affinité locale anormale avec un autre groupe géographique (Afrique, Asie, Europe,
+Amérique, Océanie) — un signal compatible avec une introgression ancienne.
+
+Les scripts de ce dépôt permettent de :
+
+décrire la structure génétique des populations étudiées ;
+parcourir l'ensemble du génome afin d'identifier des régions candidates à l'introgression ;
+valider ces régions à l'aide de plusieurs méthodes complémentaires afin de distinguer les
+véritables signaux du bruit statistique ;
+identifier les gènes présents dans les régions candidates afin de proposer des hypothèses
+sur leur intérêt biologique.
+
+## Le mécanisme de l'introgression
+
+### Qu'est-ce que l'introgression ?
+
+L'introgression est la présence, dans le génome d'une population, d'un fragment d'ADN hérité
+d'une autre population par métissage ancien.
+
+Le signal recherché n'est pas la ressemblance globale entre races, car toutes les races
+domestiques partagent une origine commune et se ressemblent donc naturellement sur l'ensemble
+du génome. Le signal recherché est une ressemblance locale anormale : une région précise où
+deux populations sont beaucoup plus proches que ne le laisserait prévoir leur parenté
+générale, car cet écart trahit un échange génétique survenu après leur séparation (de
+quelques générations à plusieurs millénaires).
+
+La taille du fragment partagé indique aussi l'ancienneté de l'échange. Un long segment presque
+identique signale une introgression récente, car les recombinaisons n'ont pas encore eu le
+temps de le fragmenter. Un fragment court signale au contraire une introgression ancienne, car
+il a été progressivement réduit par les recombinaisons et les mutations accumulées au fil des
+générations.
+
+### Comment apparaît une introgression, en général ?
+
+Une introgression apparaît en trois étapes : un individu s'hybride avec un individu d'une
+autre population, sa descendance se reproduit ensuite plusieurs générations avec la population
+d'origine (rétrocroisements), puis la majeure partie du génome étranger disparaît au fil des
+générations — sauf certains fragments, conservés durablement.
+
+Un fragment se maintient surtout s'il apporte un avantage adaptatif (meilleure survie,
+reproduction ou adaptation au milieu), car la sélection naturelle favorise alors sa diffusion
+dans la population. C'est cette conservation durable d'un fragment d'ADN provenant d'une autre
+population que l'on appelle une introgression.
+
+## L'introgression chez le mouton Awassi
+
+### 1. Origine du mouton
+
+Tous les moutons domestiques (Ovis aries) descendent d'une unique espèce sauvage, le mouflon
+d'Asie Mineure (Ovis gmelini, aussi appelé Ovis orientalis), car des études sur l'ADN
+mitochondrial l'ont confirmé comme seul ancêtre maternel de l'ensemble des races domestiques.
+
+La domestication a eu lieu il y a environ 10 000 ans au Proche-Orient (Anatolie, montagnes du
+Zagros). Depuis ce foyer, les moutons se sont répandus sur plusieurs continents et ont évolué
+indépendamment pendant des millénaires, donnant naissance aux centaines de races actuelles
+d'Europe, d'Afrique, d'Asie et du Moyen-Orient — dont l'Awassi.
+
+### 2. Pourquoi étudier l'Awassi ?
+
+Ce stage étudie la race Awassi pour deux raisons.
+
+La première est agronomique : l'Awassi est aujourd'hui la race laitière non européenne la plus
+répandue au monde, car ce mouton à queue grasse — élevé du sud-est de la Turquie jusqu'à
+l'Irak, la Syrie, la Jordanie et le Liban — est remarquablement adapté aux milieux arides (sa
+queue stocke des réserves énergétiques mobilisables en période de sécheresse, sa toison de
+type tapis limite l'échauffement dû au rayonnement solaire).
+
+La seconde est historique : l'Awassi est un excellent modèle pour rechercher des échanges
+génétiques anciens, car son aire d'élevage recouvre le berceau même de la domestication du
+mouton — présente dans cette région depuis des millénaires, elle a côtoyé les nombreuses
+populations ovines qui y ont circulé au fil de l'histoire.
+
+### 3. Pourquoi rechercher l'introgression chez l'Awassi ?
+
+L'Awassi est génétiquement très proche des autres races du Moyen-Orient — la différenciation
+génétique entre elles n'est que d'environ 0,64 % à l'échelle du génome entier — car des
+populations géographiquement proches ont davantage d'occasions d'échanger des individus au
+cours du temps (transhumance, pâturages partagés, commerce, déplacements de troupeaux).
+
+L'objectif est d'identifier les rares régions du génome où cette logique s'inverse, c'est-à-dire
+les régions où l'Awassi ressemble davantage à une population d'Afrique, d'Asie ou d'Europe qu'à
+ses voisins immédiats du Moyen-Orient. Un tel signal peut révéler un épisode ponctuel
+d'introgression survenu au cours de l'histoire des populations, car les échanges commerciaux,
+les migrations pastorales et la diffusion volontaire de races d'élevage ont déplacé des
+animaux sur de longues distances au fil des siècles.
+
+## Glossaire express
+
+| Terme | Sens simple |
+|---|---|
+| SNP | Une position du génome où l'ADN diffère d'un individu à l'autre (une « lettre » variable). |
+| VCF | Format de fichier qui liste les SNP observés chez tous les individus séquencés. |
+| FST | Différenciation génétique entre deux groupes à un endroit du génome (0 = identiques, 1 = totalement différents). |
+| fd / D-stat | Mesurent si un groupe partage anormalement plus d'ADN avec un autre groupe que prévu — signal d'introgression. |
+| dXY | Divergence génétique brute entre deux groupes, indépendante de leur diversité interne. |
+| π (pi) | Diversité génétique à l'intérieur d'un groupe. |
+| LD (déséquilibre de liaison) | Tendance de deux positions du génome à être héritées ensemble ; un LD élevé et localisé peut trahir un bloc d'ADN introgressé récent. |
+| PCA / ADMIXTURE | Méthodes qui résument la structure génétique globale d'un jeu d'individus (combien de groupes ancestraux, qui ressemble à qui). |
+| Phasage | Reconstitution de quel allèle vient de quel chromosome parental, pour reconstruire des haplotypes. |
+| Haplotype | Combinaison de variants portée ensemble sur un même chromosome. |
+| Bootstrap / jackknife | Méthodes de ré-échantillonnage statistique pour estimer la fiabilité d'un résultat. |
+
+## Déroulé du pipeline
+
+```mermaid
+flowchart TD
+    A["VCF filtrés (25 chromosomes)"] --> B["population_structure/<br>PCA · ADMIXTURE"]
+    A --> C["region_selection/<br>FST local · fd genome-wide"]
+    C --> D["Sélection des régions candidates<br>score combiné + intersection Manhattan"]
+    B -.contexte de structure.-> D
+    D --> E["validation_tests/<br>D-stat · dXY · π · LD · phasage ·<br>partage d'haplotypes · bootstrap · F/Ho"]
+    E --> F["annotation_fonctionnelle/<br>annotation GFF des SNP candidats"]
+    F --> G["Régions candidates validées<br>+ gènes associés"]
+```
 
 ## Logiciels externes utilisés (non fournis dans ce dépôt)
 
