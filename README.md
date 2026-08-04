@@ -16,7 +16,7 @@ Scripts d'analyse accompagnant le rapport de stage *« Introgression génomique 
 mouton Awassi — signaux locaux d'introgression et validation multi-critères »* (Tanguy Ruel,
 [LECA](https://leca.osug.fr/)). Recherche de régions du génome où la race Awassi (Moyen-Orient) présente une
 affinité locale anormale avec un autre groupe géographique (Afrique, Asie, Europe, Amérique,
-Océanie), signal compatible avec une introgression ancienne.
+Océanie), signal compatible avec une introgression.
 
 *Logos LECA (Laboratoire d'Écologie Alpine, UMR CNRS/UGA/USMB 5553) et CNRS (Centre National
 de la Recherche Scientifique, tutelle du LECA) reproduits à titre d'affiliation ; propriété
@@ -36,7 +36,7 @@ donnant naissance aux centaines de races actuelles réparties en Europe, en Afri
 
 Ce stage s'intéresse spécifiquement à la race Awassi pour deux raisons.
 
-La première est agronomique. L'Awassi est un mouton à queue grasse élevé du sud-est de la Turquie jusqu'à l'Irak, la Syrie, la Jordanie et le Liban.
+L'Awassi présente de nombreux avantages au niveau agronomique, en effet c'est un mouton à queue grasse élevé du sud-est de la Turquie jusqu'à l'Irak, la Syrie, la Jordanie et le Liban.
 Il est remarquablement adapté aux milieux arides : sa queue stocke des réserves énergétiques mobilisables pendant les périodes de sécheresse,
 sa toison de type tapis limite l'échauffement dû au rayonnement solaire, et il constitue aujourd'hui la race laitière non européenne la plus répandue au monde.
 
