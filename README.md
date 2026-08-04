@@ -4,7 +4,7 @@
   <img src="assets/logo_cnrs.png" alt="Logo CNRS" height="90">
 </p>
 
-<h1 align="center">Awassi Introgression Genomics</h1>
+<h1 align="center">Introgression genomique mouton awassi</h1>
 
 <p align="center">
   <a href="LICENSE"><img alt="Licence MIT" src="https://img.shields.io/badge/licence-MIT-blue.svg"></a>
