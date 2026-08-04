@@ -38,13 +38,14 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # racine du dépôt, pour importer _shared
-from _shared import gt_to_alt_count, pi_site
+from _shared import default_project, gt_to_alt_count, pi_site
 
 random.seed(42)  # graine fixe pour un tirage reproductible des fenêtres
 
-VCF_DIR = Path("analyses/fst/local_20kb_step5kb_sep_EU_AM_AUS_v1/filtered_vcf")  # VCF déjà filtrés, par chromosome
-POP_DIR = Path("analyses/fst/popmaps_separees_v1")  # popmaps par groupe géo
-OUTDIR = Path("analyses/synthese_resultats/pi_genomewide_baseline")
+PROJECT = default_project()  # racine des données : --project, sinon $AWASSI_PROJECT_DIR, sinon cwd
+VCF_DIR = PROJECT / "analyses/fst/local_20kb_step5kb_sep_EU_AM_AUS_v1/filtered_vcf"  # VCF déjà filtrés, par chromosome
+POP_DIR = PROJECT / "analyses/fst/popmaps_separees_v1"  # popmaps par groupe géo
+OUTDIR = PROJECT / "analyses/synthese_resultats/pi_genomewide_baseline"
 OUTDIR.mkdir(parents=True, exist_ok=True)
 
 GROUPS = ["Awassi", "MiddleEastNonAwassi", "Africa", "Asia", "Europe", "America", "Australia"]

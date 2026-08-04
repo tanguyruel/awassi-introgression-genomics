@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
-"""Fonctions communes réutilisées par plusieurs scripts du dépôt (extraction de
-génotypes VCF, metadata, pi), pour éviter les copies quasi identiques qui
-existaient auparavant dans fd_genomewide.py, dxy.py, pi_regions_qc.py,
-pi_genomewide_baseline.py, heterozygotie_consanguinite.py,
+"""Fonctions communes réutilisées par plusieurs scripts du dépôt (résolution du
+dossier de données, extraction de génotypes VCF, metadata, pi), pour éviter les
+copies quasi identiques qui existaient auparavant dans fd_genomewide.py, dxy.py,
+pi_regions_qc.py, pi_genomewide_baseline.py, heterozygotie_consanguinite.py,
 heatmap_haplotypes_arbre_ld.py et dstat_blockjackknife.py.
+
+`default_project()` est importée par tous les scripts Python du dépôt : c'est elle
+qui garantit qu'aucun chemin de données n'est codé en dur (voir sa docstring).
 
 Import depuis un script du dépôt (quel que soit son sous-dossier) :
 
@@ -16,13 +19,35 @@ Import depuis un script du dépôt (quel que soit son sous-dossier) :
 dépôt (le script est à un niveau de profondeur), indépendamment du
 répertoire courant depuis lequel le script est lancé.
 """
+import os
 import subprocess
+import sys
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
 MIN_CALLED_FRAC_GROUP = 0.50  # fraction minimale d'individus génotypés requise par groupe (voir allele_freq_alt)
+
+
+def default_project():
+    """Dossier racine des données (contient data/ et analyses/, hors dépôt).
+
+    Résolution, dans l'ordre : argument `--project <dossier>` de la ligne de
+    commande, sinon la variable d'environnement AWASSI_PROJECT_DIR, sinon le
+    répertoire courant. Aucun chemin n'est donc codé en dur dans les scripts :
+    seuls les sous-chemins relatifs à cette racine le sont.
+
+    La lecture de `--project` se fait directement dans sys.argv (et non via
+    argparse) pour rester utilisable au niveau module, y compris quand le
+    script est importé par un autre script du dépôt.
+    """
+    argv = sys.argv[1:]
+    if "--project" in argv:
+        i = argv.index("--project")
+        if i + 1 < len(argv):
+            return Path(argv[i + 1])
+    return Path(os.environ.get("AWASSI_PROJECT_DIR", str(Path.cwd())))
 
 
 def run(cmd):

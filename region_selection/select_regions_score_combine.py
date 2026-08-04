@@ -21,12 +21,17 @@ chemins en dur ci-dessous).
 """
 
 import subprocess
+import sys
 from pathlib import Path
 import pandas as pd
 import numpy as np
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # racine du dépôt, pour importer _shared
+from _shared import default_project
+
 # ── Chemins ───────────────────────────────────────────────────────────────────
-BASE    = Path("analyses")
+PROJECT = default_project()  # racine des données : --project, sinon $AWASSI_PROJECT_DIR, sinon cwd
+BASE    = PROJECT / "analyses"
 FST_IN  = BASE / "synthese_resultats/relecture_fst_fd/v7_FST20step5_sep_groups/FST20step5_sep_all_ranked_windows.tsv"  # FST par fenêtre déjà classé
 FD_DIR  = BASE / "fd/fd_genomewide_20kb_step5kb_sep_groups_v1_01_07_15h10/results"  # fd genome-wide déjà calculé
 VCF_DIR = BASE / "fst/local_20kb_step5kb_sep_EU_AM_AUS_v1/filtered_vcf"  # VCF filtrés par chromosome (comptage SNPs)

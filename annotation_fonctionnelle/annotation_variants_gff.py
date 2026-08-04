@@ -27,17 +27,22 @@ Usage : python3 40_annotate_variants_9regions_v1.py
 
 import gzip
 import subprocess
+import sys
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
-BASE = Path("analyses/synthese_resultats/annotation_9regions")
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # racine du dépôt, pour importer _shared
+from _shared import default_project
+
+PROJECT = default_project()  # racine des données : --project, sinon $AWASSI_PROJECT_DIR, sinon cwd
+BASE = PROJECT / "analyses/synthese_resultats/annotation_9regions"
 VCF_DIR = BASE / "vcf"
 OUT_DIR = BASE / "tables"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
-GFF = Path("data/reference/Oar_v4.0/GCF_000298735.2_Oar_v4.0_genomic.gff.gz")
+GFF = PROJECT / "data/reference/Oar_v4.0/GCF_000298735.2_Oar_v4.0_genomic.gff.gz"
 FLANK = 300_000  # fenêtre élargie pour trouver le gène le plus proche si intergénique
 
 # les 9 régions candidates avec leurs coordonnées exactes et leur P3 déjà identifié

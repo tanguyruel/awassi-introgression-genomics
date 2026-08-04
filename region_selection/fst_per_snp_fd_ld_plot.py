@@ -31,6 +31,7 @@ quelles (historique de mise au point), pas des alternatives à utiliser.
 """
 
 import subprocess
+import sys
 from pathlib import Path
 import numpy as np
 import pandas as pd
@@ -39,6 +40,9 @@ matplotlib.use("Agg")  # backend non interactif (génère les PNG/PDF sans écra
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.collections import PolyCollection
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # racine du dépôt, pour importer _shared
+from _shared import default_project
 
 SCRIPT_NAME = Path(__file__).name  # nom du script, affiché en filigrane sur les figures
 
@@ -76,11 +80,12 @@ REGIONS = [
      "ld_snps":   "analyses/LD/LD_zones_geo_v1/chr5_58.070_58.110Mb_combined_LD_snps_used.tsv"},
 ]
 
-VCF_DIR        = Path("analyses/fst/local_20kb_step5kb_sep_EU_AM_AUS_v1/filtered_vcf")
-POP_DIR        = Path("analyses/fst/popmaps_separees_v1")
-FD_DIR         = Path("analyses/fd/fd_genomewide_20kb_step5kb_sep_groups_v1_01_07_15h10/results")  # fd genome-wide déjà calculé
-FST_PERSNP_DIR = Path("analyses/fst/per_snp_regions_v9")  # cache des FST par SNP calculés à la volée
-OUTDIR         = Path("analyses/LD/figures_aligned_v9")
+PROJECT        = default_project()  # racine des données : --project, sinon $AWASSI_PROJECT_DIR, sinon cwd
+VCF_DIR        = PROJECT / "analyses/fst/local_20kb_step5kb_sep_EU_AM_AUS_v1/filtered_vcf"
+POP_DIR        = PROJECT / "analyses/fst/popmaps_separees_v1"
+FD_DIR         = PROJECT / "analyses/fd/fd_genomewide_20kb_step5kb_sep_groups_v1_01_07_15h10/results"  # fd genome-wide déjà calculé
+FST_PERSNP_DIR = PROJECT / "analyses/fst/per_snp_regions_v9"  # cache des FST par SNP calculés à la volée
+OUTDIR         = PROJECT / "analyses/LD/figures_aligned_v9"
 OUTDIR.mkdir(parents=True, exist_ok=True)
 FST_PERSNP_DIR.mkdir(parents=True, exist_ok=True)
 

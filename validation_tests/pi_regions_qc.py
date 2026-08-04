@@ -42,11 +42,12 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # racine du dépôt, pour importer _shared
-from _shared import read_list, gt_to_alt_count, pi_from_values as pi_site_value
+from _shared import default_project, read_list, gt_to_alt_count, pi_from_values as pi_site_value
 
-POP_DIR = Path("analyses/fst/popmaps_separees_v1")  # dossier des popmaps par groupe
-VCF_DIR = Path("data/raw data_08_06")  # dossier des VCF bruts par chromosome
-OUTDIR = Path("analyses/synthese_resultats/pi_9regions_20kb_step5kb_QC")
+PROJECT = default_project()  # racine des données : --project, sinon $AWASSI_PROJECT_DIR, sinon cwd
+POP_DIR = PROJECT / "analyses/fst/popmaps_separees_v1"  # dossier des popmaps par groupe
+VCF_DIR = PROJECT / "data/raw data_08_06"  # dossier des VCF bruts par chromosome
+OUTDIR = PROJECT / "analyses/synthese_resultats/pi_9regions_20kb_step5kb_QC"
 PLOTDIR = OUTDIR / "plots"
 OUTDIR.mkdir(parents=True, exist_ok=True)
 PLOTDIR.mkdir(parents=True, exist_ok=True)

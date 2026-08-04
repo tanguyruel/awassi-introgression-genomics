@@ -44,6 +44,7 @@ Sortie : analyses/synthese_resultats/manhattan_fst_fd_v1/
 
 import gzip
 import re
+import sys
 from pathlib import Path
 import pandas as pd
 import numpy as np
@@ -51,10 +52,14 @@ import matplotlib
 matplotlib.use("Agg")  # backend non interactif (génère les PNG/PDF sans écran)
 import matplotlib.pyplot as plt
 
-BASE   = Path("analyses/synthese_resultats/relecture_fst_fd/genomewide_separate_rank")  # tables FST/fd genome-wide déjà classées (construites en amont)
-OUTDIR = Path("analyses/synthese_resultats/manhattan_fst_fd_v1")
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # racine du dépôt, pour importer _shared
+from _shared import default_project
+
+PROJECT = default_project()  # racine des données : --project, sinon $AWASSI_PROJECT_DIR, sinon cwd
+BASE   = PROJECT / "analyses/synthese_resultats/relecture_fst_fd/genomewide_separate_rank"  # tables FST/fd genome-wide déjà classées (construites en amont)
+OUTDIR = PROJECT / "analyses/synthese_resultats/manhattan_fst_fd_v1"
 OUTDIR.mkdir(parents=True, exist_ok=True)
-GFF = Path("data/reference/Oar_v4.0/GCF_000298735.2_Oar_v4.0_genomic.gff.gz")
+GFF = PROJECT / "data/reference/Oar_v4.0/GCF_000298735.2_Oar_v4.0_genomic.gff.gz"
 
 K = 2000       # top-K par statistique, séparément (stable à partir de K~1500-2000, voir échange précédent)
 FLANK = 50_000  # marge pour associer un gène flanquant si rien dans la région

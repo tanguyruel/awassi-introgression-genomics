@@ -37,13 +37,14 @@ import numpy as np
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # racine du dépôt, pour importer _shared
-from _shared import read_list as load_list, gt_to_alt_count as gt_alt_count
+from _shared import default_project, read_list as load_list, gt_to_alt_count as gt_alt_count
 
-BASE = Path("analyses/synthese_resultats")
+PROJECT = default_project()  # racine des données : --project, sinon $AWASSI_PROJECT_DIR, sinon cwd
+BASE = PROJECT / "analyses/synthese_resultats"
 GENOMEWIDE_VCF = BASE / "pi_genomewide_baseline" / "sampled_windows_merged.vcf.gz"  # échantillon de fond (pi_genomewide_baseline.py)
 REGION_VCF_DIR = BASE / "annotation_9regions" / "vcf"  # VCF par région candidate (annotation_variants_gff.py)
-ZONE_POP_DIR = Path("analyses/fst/popmaps_separees_v1")
-RACE_DIR = Path("analyses/LD/popmaps_races_v1")
+ZONE_POP_DIR = PROJECT / "analyses/fst/popmaps_separees_v1"
+RACE_DIR = PROJECT / "analyses/LD/popmaps_races_v1"
 OUTDIR = BASE / "het_inbreeding"
 OUTDIR.mkdir(parents=True, exist_ok=True)
 

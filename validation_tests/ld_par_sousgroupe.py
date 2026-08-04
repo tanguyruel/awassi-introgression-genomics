@@ -22,9 +22,13 @@ dans le même dossier, importé directement)
 """
 
 import importlib.util
+import sys
 from pathlib import Path
 import numpy as np
 import pandas as pd
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # racine du dépôt, pour importer _shared
+from _shared import default_project
 
 # ── Import dynamique de heatmap_haplotypes_arbre_ld.py, pour réutiliser
 # directement ses fonctions (load_haplotypes, restrict_positions,
@@ -34,8 +38,9 @@ spec = importlib.util.spec_from_file_location("heatmap_ld", SCRIPT_HEATMAP)
 heatmap_ld = importlib.util.module_from_spec(spec)  # instancie le module (vide pour l'instant)
 spec.loader.exec_module(heatmap_ld)  # exécute heatmap_haplotypes_arbre_ld.py -> ses fonctions deviennent accessibles via heatmap_ld.xxx
 
-POP_DIR = Path("analyses/fst/popmaps_separees_v1")  # dossier des popmaps (listes d'individus par groupe)
-OUTDIR = Path("analyses/synthese_resultats/ld_per_subgroup_9regions")
+PROJECT = default_project()  # racine des données : --project, sinon $AWASSI_PROJECT_DIR, sinon cwd
+POP_DIR = PROJECT / "analyses/fst/popmaps_separees_v1"  # dossier des popmaps (listes d'individus par groupe)
+OUTDIR = PROJECT / "analyses/synthese_resultats/ld_per_subgroup_9regions"
 OUTDIR.mkdir(parents=True, exist_ok=True)
 
 MAX_MISSING = 0.05
@@ -123,7 +128,7 @@ def compute_region(reg):
 
     group_order = ["Awassi", "MiddleEastNonAwassi", p3]
     H, positions, haplotypes, individuals, hap_index, groups, selected, s2g = heatmap_ld.load_haplotypes(
-        vcf, str(POP_DIR), group_order
+        str(PROJECT / vcf), str(POP_DIR), group_order
     )  # charge la matrice haplotypes x SNP depuis le VCF phasé (fonction de heatmap_haplotypes_arbre_ld.py)
     H, positions = heatmap_ld.restrict_positions(H, positions, start, end)  # restreint à la fenêtre de la région (fonction de heatmap_haplotypes_arbre_ld.py)
 

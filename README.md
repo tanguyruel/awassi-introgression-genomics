@@ -35,7 +35,7 @@ correspondance.
 ### Arborescence
 
 ```
-awassi-introgression-genomics/
+introgression-genomique-mouton-awassi/
 ├── population_structure/       # PCA, ADMIXTURE
 ├── region_selection/            # FST, fd, sélection des régions candidates
 ├── validation_tests/            # D-stat, dXY, π, LD, phasage, partage d'haplotypes, F/Ho
@@ -162,14 +162,15 @@ agronomiques marqués : c'est aujourd'hui la race laitière non européenne la p
 monde, ce mouton à queue grasse — élevé du sud-est de la Turquie jusqu'à l'Irak, la Syrie, la
 Jordanie et le Liban — étant remarquablement adapté aux milieux arides (sa queue stocke des
 réserves énergétiques mobilisables en période de sécheresse, sa toison de type tapis limite
-l'échauffement dû au rayonnement solaire). Elle occupe ensuite une position géographique
-remarquable : son territoire recouvre le foyer de domestication décrit ci-dessus, sur le
-Levant, seul pont terrestre entre l'Afrique et l'Asie — c'est par cette même bande de terre que
-les moutons à queue grasse, dont l'Awassi est proche du prototype, se sont diffusés vers
-l'Afrique, via l'isthme de Suez au nord et via la péninsule Arabique et le détroit de
-Bab-el-Mandeb au sud. Une race installée depuis des millénaires sur cet axe de passage a donc
-côtoyé de nombreuses populations ovines qui y ont circulé au fil de l'histoire, ce qui en fait
-un excellent modèle pour rechercher d'éventuels échanges génétiques anciens.
+l'échauffement dû au rayonnement solaire).
+
+Elle occupe ensuite une position géographique remarquable. Son territoire, le Levant, est à la
+fois le foyer de domestication décrit ci-dessus et le seul pont terrestre entre l'Afrique et
+l'Asie. C'est par cette bande de terre que les moutons à queue grasse ont gagné l'Afrique, par
+l'isthme de Suez au nord et par le détroit de Bab-el-Mandeb au sud ; l'Awassi est proche du
+prototype dont ils dérivent tous. Installée depuis des millénaires sur cet axe de passage, elle
+a côtoyé les nombreuses populations ovines qui y ont circulé : c'est un excellent modèle pour
+rechercher d'éventuels échanges génétiques anciens.
 
 ### 3. Pourquoi rechercher l'introgression chez l'Awassi ?
 
@@ -225,19 +226,24 @@ flowchart TD
 ## À savoir avant de relancer un script
 
 - Tous les scripts supposent d'être lancés depuis la racine de ce dépôt.
-- 5 scripts Python (`fd_genomewide.py`, `dxy.py`, `ccdc91_retest_pic.py`,
-  `bootstrap_specificite_haplotypique.py`, `partage_haplotypes_tous_groupes.py`)
-  prennent le dossier de données externe (`data/`, `analyses/`, hors dépôt) via
-  `--project <dossier>`, sinon la variable d'environnement `AWASSI_PROJECT_DIR`, sinon
-  le répertoire courant. Les autres scripts Python de `region_selection/` et
-  `validation_tests/` n'ont pas cette option : ils gardent des chemins **relatifs**
-  codés en dur en tête de fichier (`BASE`, `POP_DIR`, `VCF_DIR`, `OUTDIR`...), qui
-  supposent la même arborescence de données que celle utilisée pendant le stage. Si vos
-  données sont organisées différemment, il faut éditer ces variables directement dans
-  le code de chaque script.
+- **Aucun chemin n'est codé en dur.** Les données (`data/`, `analyses/`) vivent hors du
+  dépôt, et tous les scripts Python résolvent leur dossier racine de la même façon :
+  l'argument `--project <dossier>`, sinon la variable d'environnement
+  `AWASSI_PROJECT_DIR`, sinon le répertoire courant. Seuls les sous-chemins relatifs à
+  cette racine (`analyses/fst/popmaps_separees_v1`, `data/raw data_08_06`...) sont
+  écrits dans le code, en tête de fichier. La résolution est faite par
+  `default_project()` dans `_shared.py`.
+
+  ```bash
+  # les trois formes sont équivalentes
+  python3 validation_tests/dxy.py --project /chemin/vers/les/donnees
+  AWASSI_PROJECT_DIR=/chemin/vers/les/donnees python3 validation_tests/dxy.py
+  cd /chemin/vers/les/donnees && python3 /chemin/vers/le/depot/validation_tests/dxy.py
+  ```
+
 - Les scripts shell (`pca.sh`, `admixture.sh`, `fst_local_genomewide.sh`,
-  `phasing_beagle.sh`) suivent le même principe : dossier de données via
-  `AWASSI_PROJECT_DIR` (sinon le répertoire courant), plus de chemin absolu en dur.
+  `phasing_beagle.sh`) suivent le même principe : ils font `cd "${AWASSI_PROJECT_DIR:-$PWD}"`
+  puis n'utilisent que des chemins relatifs.
   `admixture.sh` prend en plus le binaire ADMIXTURE via `ADMIXTURE_BIN` (sinon cherché
   dans le `PATH`), `phasing_beagle.sh` le `.jar` de Beagle via `BEAGLE_JAR`.
 - `pca.sh` s'appuie en plus sur un `config_project.sh` (variables `PROJECT_DIR`,

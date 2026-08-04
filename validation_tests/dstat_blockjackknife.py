@@ -29,12 +29,13 @@ from pathlib import Path
 from collections import defaultdict
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # racine du dépôt, pour importer _shared
-from _shared import read_list
+from _shared import default_project, read_list
 
-POP_DIR = Path("analyses/fst/popmaps_separees_v1")  # dossier des popmaps par groupe (1 fichier liste d'échantillons par groupe)
-POPMAP_MAIN = Path("data/popmap_main5.tsv")  # seule source pour Ovis_canadensis (absent de POP_DIR)
-VCF_DIR = Path("data/raw data_08_06")
-OUTDIR = Path("analyses/synthese_resultats/dstat_9regions_150kb")
+PROJECT = default_project()  # racine des données : --project, sinon $AWASSI_PROJECT_DIR, sinon cwd
+POP_DIR = PROJECT / "analyses/fst/popmaps_separees_v1"  # dossier des popmaps par groupe (1 fichier liste d'échantillons par groupe)
+POPMAP_MAIN = PROJECT / "data/popmap_main5.tsv"  # seule source pour Ovis_canadensis (absent de POP_DIR)
+VCF_DIR = PROJECT / "data/raw data_08_06"
+OUTDIR = PROJECT / "analyses/synthese_resultats/dstat_9regions_150kb"
 OUTDIR.mkdir(parents=True, exist_ok=True)
 
 P1 = "MiddleEastNonAwassi"  # population 1 (référence, non-Awassi Moyen-Orient)

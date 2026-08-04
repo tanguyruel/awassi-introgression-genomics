@@ -22,12 +22,17 @@ Usage : python3 34_rarefaction_haplotype_sharing_9regions_v1.py
 (nécessite les sorties de 26_heatmap_LD_arbre_9regions_v2.py)
 """
 
+import sys
 from pathlib import Path
 import numpy as np
 import pandas as pd
 
-HEATMAP_DIR = Path("analyses/haplotype_heatmap/Awassi_haplo/results/figures_finales/regions_A_9regions_v2")  # dossier des sorties du heatmap_haplotypes_arbre_ld.py (row_order.tsv)
-OUTDIR = Path("analyses/synthese_resultats/rarefaction_haplotype_sharing_9regions")
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # racine du dépôt, pour importer _shared
+from _shared import default_project
+
+PROJECT = default_project()  # racine des données : --project, sinon $AWASSI_PROJECT_DIR, sinon cwd
+HEATMAP_DIR = PROJECT / "analyses/haplotype_heatmap/Awassi_haplo/results/figures_finales/regions_A_9regions_v2"  # dossier des sorties du heatmap_haplotypes_arbre_ld.py (row_order.tsv)
+OUTDIR = PROJECT / "analyses/synthese_resultats/rarefaction_haplotype_sharing_9regions"
 OUTDIR.mkdir(parents=True, exist_ok=True)
 
 MISMATCH_THRESHOLD = 0.01  # seuil de fraction de mésappariement pour un match "quasi identique" (<1%)

@@ -41,10 +41,11 @@ from matplotlib.gridspec import GridSpec
 from matplotlib.transforms import blended_transform_factory
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # racine du dépôt, pour importer _shared
-from _shared import run as run_cmd, read_list
+from _shared import default_project, run as run_cmd, read_list
 
-POP_DIR = Path("analyses/fst/popmaps_separees_v1")  # dossier des popmaps (listes d'individus par groupe)
-OUTDIR  = Path("analyses/haplotype_heatmap/Awassi_haplo/results/figures_finales/regions_A_9regions_v2")
+PROJECT = default_project()  # racine des données : --project, sinon $AWASSI_PROJECT_DIR, sinon cwd
+POP_DIR = PROJECT / "analyses/fst/popmaps_separees_v1"  # dossier des popmaps (listes d'individus par groupe)
+OUTDIR  = PROJECT / "analyses/haplotype_heatmap/Awassi_haplo/results/figures_finales/regions_A_9regions_v2"
 OUTDIR.mkdir(parents=True, exist_ok=True)
 
 MAX_MISSING = 0.05
