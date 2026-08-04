@@ -146,26 +146,29 @@ population que l'on appelle une introgression.
 ### 1. Origine du mouton
 
 Tous les moutons domestiques (Ovis aries) descendent d'une unique espèce sauvage, le mouflon
-d'Asie Mineure (Ovis gmelini, aussi appelé Ovis orientalis), car des études sur l'ADN
-mitochondrial l'ont confirmé comme seul ancêtre maternel de l'ensemble des races domestiques.
+d'Asie Mineure (Ovis gmelini, aussi appelé Ovis orientalis) : les études sur l'ADN mitochondrial
+l'ont confirmé comme seul ancêtre maternel de l'ensemble des races domestiques.
 
-La domestication a eu lieu il y a environ 10 000 ans au Proche-Orient (Anatolie, montagnes du
-Zagros). Depuis ce foyer, les moutons se sont répandus sur plusieurs continents et ont évolué
-indépendamment pendant des millénaires, donnant naissance aux centaines de races actuelles
-d'Europe, d'Afrique, d'Asie et du Moyen-Orient — dont l'Awassi.
+La domestication a eu lieu vers 8000 avant notre ère (soit il y a environ 10 000 ans) en
+Anatolie centrale, et les lignées maternelles des moutons actuels pointent vers cette même
+région et le Zagros voisin. Depuis ce foyer, les moutons se sont répandus sur plusieurs
+continents et ont évolué indépendamment pendant des millénaires, donnant naissance aux
+centaines de races actuelles d'Europe, d'Afrique, d'Asie et du Moyen-Orient — dont l'Awassi.
 
 ### 2. Pourquoi étudier l'Awassi ?
 
-Ce stage étudie la race Awassi pour deux raisons.
-
-L'Awassi présente des avantages agronomiques marqués : c'est aujourd'hui la race laitière non
-européenne la plus répandue au monde. Ce mouton à queue grasse, élevé du sud-est de la
-Turquie jusqu'à l'Irak, la Syrie, la Jordanie et le Liban, est remarquablement adapté aux
-milieux arides (sa queue stocke des réserves énergétiques mobilisables en période de
-sécheresse, sa toison de type tapis limite l'échauffement dû au rayonnement solaire).
-
-De plus l'awassi est élevée depuis des millénaires dans le berceau de domestication du mouton,
-où elle a côtoyé de nombreuses populations ovines au fil de l'histoire : elle constitue donc
+Ce stage étudie la race Awassi pour deux raisons. Elle présente d'abord des avantages
+agronomiques marqués : c'est aujourd'hui la race laitière non européenne la plus répandue au
+monde, ce mouton à queue grasse — élevé du sud-est de la Turquie jusqu'à l'Irak, la Syrie, la
+Jordanie et le Liban — étant remarquablement adapté aux milieux arides (sa queue stocke des
+réserves énergétiques mobilisables en période de sécheresse, sa toison de type tapis limite
+l'échauffement dû au rayonnement solaire). Elle occupe ensuite une position géographique
+remarquable : son territoire recouvre le foyer de domestication décrit ci-dessus, sur le
+Levant, seul pont terrestre entre l'Afrique et l'Asie — c'est par cette même bande de terre que
+les moutons à queue grasse, dont l'Awassi est proche du prototype, se sont diffusés vers
+l'Afrique, via l'isthme de Suez au nord et via la péninsule Arabique et le détroit de
+Bab-el-Mandeb au sud. Une race installée depuis des millénaires sur cet axe de passage a donc
+côtoyé de nombreuses populations ovines qui y ont circulé au fil de l'histoire, ce qui en fait
 un excellent modèle pour rechercher d'éventuels échanges génétiques anciens.
 
 ### 3. Pourquoi rechercher l'introgression chez l'Awassi ?
@@ -178,9 +181,9 @@ cours du temps (transhumance, pâturages partagés, commerce, déplacements de t
 L'objectif est d'identifier les rares régions du génome où cette logique s'inverse, c'est-à-dire
 les régions où l'Awassi ressemble davantage à une population d'Afrique, d'Asie ou d'Europe qu'à
 ses voisins immédiats du Moyen-Orient. Un tel signal peut révéler un épisode ponctuel
-d'introgression survenu au cours de l'histoire des populations, car les échanges commerciaux,
-les migrations pastorales et la diffusion volontaire de races d'élevage ont déplacé des
-animaux sur de longues distances au fil des siècles.
+d'introgression survenu au cours de l'histoire des populations : les mêmes mécanismes qui
+rapprochent génétiquement les voisins immédiats ont aussi, plus rarement, déplacé des animaux
+sur de longues distances.
 
 ## Glossaire express
 
@@ -227,10 +230,11 @@ flowchart TD
   prennent le dossier de données externe (`data/`, `analyses/`, hors dépôt) via
   `--project <dossier>`, sinon la variable d'environnement `AWASSI_PROJECT_DIR`, sinon
   le répertoire courant. Les autres scripts Python de `region_selection/` et
-  `validation_tests/` gardent des chemins **relatifs** en dur en tête de fichier
-  (`BASE`, `POP_DIR`, `VCF_DIR`, `OUTDIR`...) : pas de chemin absolu, mais à éditer
-  directement dans le code si les données ne sont pas au même sous-chemin que celui
-  utilisé pendant le stage.
+  `validation_tests/` n'ont pas cette option : ils gardent des chemins **relatifs**
+  codés en dur en tête de fichier (`BASE`, `POP_DIR`, `VCF_DIR`, `OUTDIR`...), qui
+  supposent la même arborescence de données que celle utilisée pendant le stage. Si vos
+  données sont organisées différemment, il faut éditer ces variables directement dans
+  le code de chaque script.
 - Les scripts shell (`pca.sh`, `admixture.sh`, `fst_local_genomewide.sh`,
   `phasing_beagle.sh`) suivent le même principe : dossier de données via
   `AWASSI_PROJECT_DIR` (sinon le répertoire courant), plus de chemin absolu en dur.
