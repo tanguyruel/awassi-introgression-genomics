@@ -126,10 +126,10 @@ quelques générations à plusieurs millénaires).
 La taille du fragment partagé indique aussi l'ancienneté de l'échange. Un long segment presque
 identique signale une introgression récente, car les recombinaisons n'ont pas encore eu le
 temps de le fragmenter. Un fragment court signale au contraire une introgression ancienne, car
-il a été progressivement réduit par les recombinaisons et les mutations accumulées au fil des
+il a été progressivement réduit par recombinaisons et mutations au fil des
 générations.
 
-### Comment apparaît une introgression, en général ?
+### Comment apparaît une introgression ?
 
 Une introgression apparaît en trois étapes : un individu s'hybride avec un individu d'une
 autre population, sa descendance se reproduit ensuite plusieurs générations avec la population
@@ -137,7 +137,7 @@ d'origine (rétrocroisements), puis la majeure partie du génome étranger dispa
 générations — sauf certains fragments, conservés durablement.
 
 Un fragment se maintient surtout s'il apporte un avantage adaptatif (meilleure survie,
-reproduction ou adaptation au milieu), car la sélection naturelle favorise alors sa diffusion
+reproduction ou adaptation au milieu), la sélection naturelle favorise alors sa diffusion
 dans la population. C'est cette conservation durable d'un fragment d'ADN provenant d'une autre
 population que l'on appelle une introgression.
 
@@ -158,16 +158,15 @@ d'Europe, d'Afrique, d'Asie et du Moyen-Orient — dont l'Awassi.
 
 Ce stage étudie la race Awassi pour deux raisons.
 
-La première est agronomique : l'Awassi est aujourd'hui la race laitière non européenne la plus
-répandue au monde, car ce mouton à queue grasse — élevé du sud-est de la Turquie jusqu'à
-l'Irak, la Syrie, la Jordanie et le Liban — est remarquablement adapté aux milieux arides (sa
-queue stocke des réserves énergétiques mobilisables en période de sécheresse, sa toison de
-type tapis limite l'échauffement dû au rayonnement solaire).
+L'Awassi présente des avantages agronomiques marqués : c'est aujourd'hui la race laitière non
+européenne la plus répandue au monde. Ce mouton à queue grasse, élevé du sud-est de la
+Turquie jusqu'à l'Irak, la Syrie, la Jordanie et le Liban, est remarquablement adapté aux
+milieux arides (sa queue stocke des réserves énergétiques mobilisables en période de
+sécheresse, sa toison de type tapis limite l'échauffement dû au rayonnement solaire).
 
-La seconde est historique : l'Awassi est un excellent modèle pour rechercher des échanges
-génétiques anciens, car son aire d'élevage recouvre le berceau même de la domestication du
-mouton — présente dans cette région depuis des millénaires, elle a côtoyé les nombreuses
-populations ovines qui y ont circulé au fil de l'histoire.
+De plus l'awassi est élevée depuis des millénaires dans le berceau de domestication du mouton,
+où elle a côtoyé de nombreuses populations ovines au fil de l'histoire : elle constitue donc
+un excellent modèle pour rechercher d'éventuels échanges génétiques anciens.
 
 ### 3. Pourquoi rechercher l'introgression chez l'Awassi ?
 
