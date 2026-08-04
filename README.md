@@ -97,8 +97,8 @@ Ce dépôt accompagne le rapport de stage *« Introgression génomique chez le m
 signaux locaux d'introgression et validation multi-critères »* (Tanguy Ruel,
 [LECA](https://leca.osug.fr/)).
 
-L'objectif est de rechercher des régions du génome où la race Awassi (Moyen-Orient) présente
-une affinité locale anormale avec un autre groupe géographique (Afrique, Asie, Europe,
+L'objectif est de rechercher **des régions du génome où la race Awassi (Moyen-Orient) présente
+une affinité locale anormale avec un autre groupe géographique** (Afrique, Asie, Europe,
 Amérique, Océanie) — un signal compatible avec une introgression ancienne.
 
 Les scripts de ce dépôt permettent de :
