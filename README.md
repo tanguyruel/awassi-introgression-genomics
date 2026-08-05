@@ -172,7 +172,7 @@ nord (voie terrestre), et par le détroit de Bab-el-Mandeb au sud (franchi par v
 l'Awassi est proche du « prototype » dont ils dérivent tous. Installée depuis des millénaires
 sur cet axe de passage, elle a côtoyé les nombreuses populations ovines qui y ont circulé.
 
-### 3. Le signal recherché chez l'Awassi
+### 3. Le signal recherché
 
 L'Awassi est génétiquement très proche des autres races du Moyen-Orient : la différenciation
 génétique entre elles n'est que d'environ 0,64 % à l'échelle du génome entier. Cette
