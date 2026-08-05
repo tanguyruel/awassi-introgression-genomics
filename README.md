@@ -157,25 +157,25 @@ centaines de races actuelles d'Europe, d'Afrique, d'Asie et du Moyen-Orient — 
 
 ### 2. Pourquoi étudier l'Awassi ?
 
-Ce stage étudie la race Awassi pour deux raisons. Elle présente d'abord des avantages
-agronomiques marqués : c'est aujourd'hui la race laitière non européenne la plus répandue au
+Ce stage étudie la race Awassi pour deux raisons. 
+Elle présente d'abord des avantages agronomiques marqués : 
+c'est aujourd'hui la race laitière non européenne la plus répandue au
 monde, ce mouton à queue grasse — élevé du sud-est de la Turquie jusqu'à l'Irak, la Syrie, la
-Jordanie et le Liban — étant remarquablement adapté aux milieux arides (sa queue stocke des
+Jordanie et le Liban — est remarquablement adapté aux milieux arides (sa queue stocke des
 réserves énergétiques mobilisables en période de sécheresse, sa toison de type tapis limite
 l'échauffement dû au rayonnement solaire).
 
-Elle occupe ensuite une position géographique remarquable. Son territoire, le Levant, est à la
-fois le foyer de domestication décrit ci-dessus et le seul pont terrestre entre l'Afrique et
+De plus, son territoire, le Levant, est à la fois le foyer de domestication décrit ci-dessus et le seul pont terrestre entre l'Afrique et
 l'Asie. C'est par cette bande de terre que les moutons à queue grasse ont gagné l'Afrique, par
 l'isthme de Suez au nord et par le détroit de Bab-el-Mandeb au sud ; l'Awassi est proche du
-prototype dont ils dérivent tous. Installée depuis des millénaires sur cet axe de passage, elle
+"prototype" dont ils dérivent tous. Installée depuis des millénaires sur cet axe de passage, elle
 a côtoyé les nombreuses populations ovines qui y ont circulé : c'est un excellent modèle pour
 rechercher d'éventuels échanges génétiques anciens.
 
 ### 3. Pourquoi rechercher l'introgression chez l'Awassi ?
 
-L'Awassi est génétiquement très proche des autres races du Moyen-Orient — la différenciation
-génétique entre elles n'est que d'environ 0,64 % à l'échelle du génome entier — car des
+L'Awassi est génétiquement très proche des autres races du Moyen-Orient, la différenciation
+génétique entre elles n'est que d'environ 0,64 % à l'échelle du génome entier, en effet des
 populations géographiquement proches ont davantage d'occasions d'échanger des individus au
 cours du temps (transhumance, pâturages partagés, commerce, déplacements de troupeaux).
 
