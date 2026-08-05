@@ -18,9 +18,9 @@ de leurs institutions respectives, non couverts par la licence MIT de ce dépôt
 
 ## Contenu de ce dépôt
 
-Ce dépôt contient 20 scripts, un par méthode utilisée dans le rapport, organisés selon les
-mêmes sections que le rapport (structure de population, sélection des régions candidates,
-tests de validation, annotation fonctionnelle).
+Ce dépôt contient 20 scripts, un par méthode utilisée dans le rapport, répartis dans les
+mêmes sections : structure de population, sélection des régions candidates, tests de
+validation, annotation fonctionnelle.
 
 Seule la version de référence de chaque méthode est publiée ici, sous un nom explicite : le
 dépôt de travail complet (~340 scripts, itérations de mise au point incluses) reste local.
@@ -103,10 +103,10 @@ une affinité locale anormale avec un autre groupe géographique (Afrique, Asie,
 Les scripts de ce dépôt permettent de :
 
 décrire la structure génétique des populations étudiées ;
-parcourir l'ensemble du génome afin d'identifier des régions candidates à l'introgression ;
+parcourir l'ensemble du génome pour identifier des régions candidates à l'introgression ;
 valider ces régions à l'aide de plusieurs méthodes complémentaires afin de distinguer les
 véritables signaux du bruit statistique ;
-identifier les gènes présents dans les régions candidates afin de proposer des hypothèses
+identifier les gènes présents dans les régions candidates pour proposer des hypothèses
 sur leur intérêt biologique.
 
 ## Le mécanisme de l'introgression
@@ -120,24 +120,23 @@ Le signal recherché n'est pas la ressemblance globale entre races, car toutes l
 domestiques partagent une origine commune et se ressemblent donc naturellement sur l'ensemble
 du génome. Le signal recherché est une ressemblance locale anormale : une région précise où
 deux populations sont beaucoup plus proches que ne le laisserait prévoir leur parenté
-générale, car cet écart trahit un échange génétique survenu après leur séparation (de
+générale. Cet écart trahit un échange génétique survenu après leur séparation (de
 quelques générations à plusieurs millénaires).
 
 La taille du fragment partagé indique aussi l'ancienneté de l'échange. Un long segment presque
 identique signale une introgression récente, car les recombinaisons n'ont pas encore eu le
 temps de le fragmenter. Un fragment court signale au contraire une introgression ancienne, car
-il a été progressivement réduit par recombinaisons et mutations au fil des
-générations.
+il a été progressivement fragmenté par les recombinaisons successives au fil des générations.
 
 ### Comment apparaît une introgression ?
 
-Une introgression apparaît en trois étapes : un individu s'hybride avec un individu d'une
-autre population, sa descendance se reproduit ensuite plusieurs générations avec la population
-d'origine (rétrocroisements), puis la majeure partie du génome étranger disparaît au fil des
-générations — sauf certains fragments, conservés durablement.
+Une introgression apparaît en trois étapes : deux individus de populations différentes
+s'hybrident, leur descendance se reproduit ensuite pendant plusieurs générations avec la
+population d'origine (rétrocroisements), puis la majeure partie du génome étranger disparaît
+au fil des générations — à l'exception de certains fragments, conservés durablement.
 
 Un fragment se maintient surtout s'il apporte un avantage adaptatif (meilleure survie,
-reproduction ou adaptation au milieu), la sélection naturelle favorise alors sa diffusion
+reproduction ou adaptation au milieu) : la sélection naturelle favorise alors sa diffusion
 dans la population. C'est cette conservation durable d'un fragment d'ADN provenant d'une autre
 population que l'on appelle une introgression.
 
@@ -146,8 +145,8 @@ population que l'on appelle une introgression.
 ### 1. Origine du mouton
 
 Tous les moutons domestiques (Ovis aries) descendent d'une unique espèce sauvage, le mouflon
-d'Asie Mineure (Ovis gmelini, aussi appelé Ovis orientalis) : les études sur l'ADN mitochondrial
-l'ont confirmé comme seul ancêtre maternel de l'ensemble des races domestiques.
+d'Asie Mineure (Ovis gmelini, aussi appelé Ovis orientalis), confirmé par les études sur
+l'ADN mitochondrial comme seul ancêtre maternel de l'ensemble des races domestiques.
 
 La domestication a eu lieu vers 8000 avant notre ère (soit il y a environ 10 000 ans) en
 Anatolie centrale, et les lignées maternelles des moutons actuels pointent vers cette même
@@ -157,34 +156,37 @@ centaines de races actuelles d'Europe, d'Afrique, d'Asie et du Moyen-Orient — 
 
 ### 2. Pourquoi étudier l'Awassi ?
 
-Ce stage étudie la race Awassi pour deux raisons. 
-Elle présente d'abord des avantages agronomiques marqués : 
-c'est aujourd'hui la race laitière non européenne la plus répandue au
-monde, ce mouton à queue grasse — élevé du sud-est de la Turquie jusqu'à l'Irak, la Syrie, la
-Jordanie et le Liban — est remarquablement adapté aux milieux arides (sa queue stocke des
-réserves énergétiques mobilisables en période de sécheresse, sa toison de type tapis limite
-l'échauffement dû au rayonnement solaire).
+Ce stage étudie la race Awassi pour deux raisons.
 
-De plus, son territoire, le Levant, est à la fois le foyer de domestication décrit ci-dessus et le seul pont terrestre entre l'Afrique et
-l'Asie. C'est par cette bande de terre que les moutons à queue grasse ont gagné l'Afrique, par
-l'isthme de Suez au nord et par le détroit de Bab-el-Mandeb au sud ; l'Awassi est proche du
-"prototype" dont ils dérivent tous. Installée depuis des millénaires sur cet axe de passage, elle
-a côtoyé les nombreuses populations ovines qui y ont circulé : c'est un excellent modèle pour
-rechercher d'éventuels échanges génétiques anciens.
+Elle présente d'abord des avantages agronomiques marqués : c'est aujourd'hui la race laitière
+non européenne la plus répandue au monde. Ce mouton à queue grasse — élevé du sud-est de la
+Turquie jusqu'à l'Irak, la Syrie, la Jordanie et le Liban — est remarquablement adapté aux
+milieux arides : sa queue stocke des réserves énergétiques mobilisables en période de
+sécheresse, et sa toison de type tapis limite l'échauffement dû au rayonnement solaire.
 
-### 3. Pourquoi rechercher l'introgression chez l'Awassi ?
+De plus, l'Awassi constitue un excellent modèle pour rechercher d'éventuelles traces
+d'introgression, car son territoire, le Levant, est à la fois le foyer de domestication
+décrit ci-dessus et le principal point de passage terrestre entre l'Afrique et l'Asie. C'est
+par cette région que les moutons à queue grasse ont gagné l'Afrique : par l'isthme de Suez au
+nord (voie terrestre), et par le détroit de Bab-el-Mandeb au sud (franchi par voie maritime) —
+l'Awassi est proche du « prototype » dont ils dérivent tous. Installée depuis des millénaires
+sur cet axe de passage, elle a côtoyé les nombreuses populations ovines qui y ont circulé.
 
-L'Awassi est génétiquement très proche des autres races du Moyen-Orient, la différenciation
-génétique entre elles n'est que d'environ 0,64 % à l'échelle du génome entier, en effet des
-populations géographiquement proches ont davantage d'occasions d'échanger des individus au
-cours du temps (transhumance, pâturages partagés, commerce, déplacements de troupeaux).
+### 3. Le signal recherché chez l'Awassi
+
+L'Awassi est génétiquement très proche des autres races du Moyen-Orient : la différenciation
+génétique entre elles n'est que d'environ 0,64 % à l'échelle du génome entier. Cette
+proximité s'explique par le fait que des populations géographiquement proches ont davantage
+d'occasions d'échanger des individus au cours du temps (transhumance, pâturages partagés,
+commerce, déplacements de troupeaux).
 
 L'objectif est d'identifier les rares régions du génome où cette logique s'inverse, c'est-à-dire
 les régions où l'Awassi ressemble davantage à une population d'Afrique, d'Asie ou d'Europe qu'à
 ses voisins immédiats du Moyen-Orient. Un tel signal peut révéler un épisode ponctuel
-d'introgression survenu au cours de l'histoire des populations : les mêmes mécanismes qui
-rapprochent génétiquement les voisins immédiats ont aussi, plus rarement, déplacé des animaux
-sur de longues distances.
+d'introgression survenu au cours de l'histoire des populations : les mêmes échanges d'animaux
+(transhumance, commerce, déplacements de troupeaux) qui rapprochent génétiquement les
+populations voisines ont pu, plus rarement, avoir lieu aussi sur de longues distances,
+laissant alors une trace génétique isolée dans le génome de l'Awassi.
 
 ## Glossaire express
 
@@ -276,7 +278,7 @@ simulation et les résultats obtenus.
 
 ## Remerciements
 
-Merci à François, Océane (LECA) pour leur accompagnement pendant le
+Merci à François et Océane pour leur accompagnement pendant le
 stage. Merci aussi à Frédéric Boyer pour nos échanges, ses idées
 de méthode, et son aide sur heatmap + arbre + LD (`heatmap_haplotypes_arbre_ld.py`).
 
